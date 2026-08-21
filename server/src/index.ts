@@ -16,7 +16,7 @@ import historyRoutes from './routes/history.js';
 import preferencesRoutes from './routes/preferences.js';
 import parseRoutes from './routes/parse.js';
 import subscriptionRoutes from './routes/subscription.js';
-import { connectDatabase, disconnectDatabase } from './lib/prisma.js';
+import { connectDatabase, disconnectDatabase, prisma } from './lib/prisma.js';
 import { seedDatabase } from './seed.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -24,7 +24,17 @@ const __dirname = dirname(__filename);
 
 const PORT = parseInt(process.env['PORT'] ?? '4000', 10);
 const HOST = process.env['HOST'] ?? '0.0.0.0';
-const JWT_SECRET = process.env['JWT_SECRET'] ?? 'dev-secret-change-in-production';
+
+// Fail fast: JWT_SECRET is required, especially in production
+const JWT_SECRET = process.env['JWT_SECRET'];
+if (!JWT_SECRET) {
+  throw new Error(
+    'JWT_SECRET environment variable is required. Generate one with: openssl rand -hex 32',
+  );
+}
+if (JWT_SECRET === 'dev-secret-change-in-production') {
+  throw new Error('JWT_SECRET must not be the default dev value. Generate a real secret.');
+}
 
 const app = Fastify({
   logger: {
@@ -58,8 +68,19 @@ await app.register(preferencesRoutes);
 await app.register(parseRoutes);
 await app.register(subscriptionRoutes);
 
-app.get('/api/v1/health', async () => {
-  return { status: 'ok', timestamp: new Date().toISOString() };
+app.get('/api/v1/health', async (_request, reply) => {
+  try {
+    // Verify DB connectivity
+    await prisma.$queryRaw`SELECT 1`;
+    return { status: 'ok', database: 'connected', timestamp: new Date().toISOString() };
+  } catch (err) {
+    reply.status(503);
+    return {
+      status: 'error',
+      database: 'disconnected',
+      timestamp: new Date().toISOString(),
+    };
+  }
 });
 
 // Serve app.html from project root

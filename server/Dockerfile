@@ -27,18 +27,29 @@ RUN apk add --no-cache wget
 
 WORKDIR /app
 
+# Create non-root user
+RUN addgroup -S shyftex && adduser -S shyftex -G shyftex
+
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/dist ./dist
 COPY --from=base /app/prisma ./prisma
 COPY --from=base /app/prisma.config.ts ./
 COPY --from=base /app/package*.json ./
 
+# Copy app.html for the web demo
+COPY app.html ./app.html
+
+# Set ownership
+RUN chown -R shyftex:shyftex /app
+
+USER shyftex
+
 ENV NODE_ENV=production
 ENV PORT=4000
 
 EXPOSE 4000
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:4000/api/v1/health || exit 1
 
 # Run migration + start server

@@ -9,7 +9,10 @@
     "scheme": "shopping-optimizer",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.shoppingoptimizer.app"
+      "bundleIdentifier": "com.shoppingoptimizer.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "SHYFTEX necesita tu ubicacion para encontrar tiendas cercanas y optimizar tus rutas de compra."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,6 +22,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.shoppingoptimizer.app",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -28,7 +32,14 @@
     "plugins": [
       "expo-router",
       "expo-status-bar",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow SHYFTEX to use your location to find nearby stores and optimize your shopping route."
+        }
+      ],
+      "expo-secure-store"
     ]
   }
 }
