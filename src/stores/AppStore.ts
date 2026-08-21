@@ -1,5 +1,9 @@
 /**
  * App Store - Global state management with Zustand.
+ *
+ * Connects to the real backend API with offline fallback to local mock data.
+ * Auth, lists, missions, vehicles, and preferences are persisted via backend.
+ * Optimization can run server-side or fall back to local engine.
  */
 
 import { create } from 'zustand';
@@ -17,13 +21,26 @@ import {
   MissionItemStatus,
 } from '../domain/entities/ShoppingMission';
 import { Store } from '../domain/entities/Store';
-import { Price } from '../domain/entities/Price';
-import { Promotion } from '../domain/entities/Promotion';
-import { Inventory } from '../domain/entities/Inventory';
 import { Money } from '../domain/valueObjects/Money';
-import { Product } from '../domain/entities/Product';
 import { OptimizationEngine, OptimizationInput } from '../optimization/OptimizationEngine';
 import { MockRetailDataProvider } from '../infrastructure/providers/MockRetailDataProvider';
+import {
+  authApi,
+  listsApi,
+  optimizeApi,
+  missionsApi,
+  vehiclesApi,
+  preferencesApi,
+  tokenStore,
+  ApiError,
+  type BackendParseResult,
+  type BackendPlanResult,
+  type BackendMission,
+  type BackendMissionItem,
+  type BackendVehicle,
+  type BackendPreferences,
+  type StoredUser,
+} from '../infrastructure/api/apiClient';
 import { v4 as uuidv4 } from 'uuid';
 
 // ─── Singleton Providers ───
@@ -31,7 +48,174 @@ import { v4 as uuidv4 } from 'uuid';
 const retailDataProvider = new MockRetailDataProvider();
 const optimizationEngine = new OptimizationEngine();
 
-// ─── Auth State ───
+// ─── Constants ───
+
+const CDMX_DEFAULT_LOCATION = { latitude: 19.4326, longitude: -99.1332 } as const;
+
+// ─── Helper: Map BackendParseResult items to ShoppingItem entities ───
+
+function mapBackendItemsToList(
+  backendItems: BackendParseResult['items'],
+  listId: string,
+): ShoppingItem[] {
+  return backendItems.map(
+    (item) =>
+      new ShoppingItem({
+        id: item.id,
+        listId: item.listId,
+        rawInput: item.rawInput,
+        normalizedName: item.normalizedName,
+        category: item.category,
+        brand: item.brand,
+        presentation: item.presentation,
+        quantity: item.quantity,
+        unit: item.unit,
+        size: item.size,
+        barcode: item.barcode,
+        exactProductId: item.exactProductId,
+        allowsSubstitution: item.allowsSubstitution,
+        brandRestrictions: item.brandRestrictions,
+        substituteProductIds: item.substituteProductIds,
+        priority: (item.priority as ItemPriority) || ItemPriority.PREFERRED,
+        isRequired: item.isRequired,
+        notes: item.notes,
+        matchedProductId: item.matchedProductId,
+        matchLevel: (item.matchLevel as MatchLevel) || MatchLevel.INCOMPATIBLE,
+        createdAt: new Date(item.createdAt),
+        updatedAt: new Date(item.updatedAt),
+      }),
+  );
+}
+
+// ─── Helper: Map BackendPlanResult to ShoppingPlan entity ───
+
+function mapBackendPlanToEntity(result: BackendPlanResult, listId: string): ShoppingPlan {
+  return new ShoppingPlan({
+    id: result.planId,
+    userId: '',
+    listId,
+    mode: OptimizationMode.BALANCED,
+    totalProductCost: Money.fromCents(result.summary.totalProductCostCents),
+    totalTransportCost: Money.fromCents(result.summary.totalTransportCostCents),
+    totalTimeMinutes: result.summary.estimatedTimeMinutes,
+    totalDistanceKm: result.summary.totalDistanceKm,
+    effectiveTotalCost: Money.fromCents(result.summary.effectiveCostCents),
+    estimatedSavings:
+      result.summary.savingsCents > 0 ? Money.fromCents(result.summary.savingsCents) : null,
+    baselineCost:
+      result.summary.baselineCents > 0 ? Money.fromCents(result.summary.baselineCents) : null,
+    baselineDescription: null,
+    confidence: (result.summary.confidence as PlanConfidence) || PlanConfidence.MEDIUM,
+    storeStops: result.stores.map((store) => ({
+      storeId: store.storeId,
+      storeName: store.storeName,
+      retailerName: store.retailerName,
+      address: store.address,
+      latitude: store.latitude,
+      longitude: store.longitude,
+      productCost: Money.fromCents(store.productCostCents),
+      transportCost: Money.fromCents(store.transportCostCents),
+      items: store.items.map((item) => ({
+        shoppingItemId: item.itemId,
+        productId: item.itemId,
+        productName: item.name,
+        brand: '',
+        quantity: item.quantity,
+        unit: item.unit,
+        originalPrice: Money.fromCents(item.unitPriceCents),
+        effectivePrice: Money.fromCents(item.lineTotalCents),
+        savings: Money.zero(),
+        matchLevel: MatchLevel.EXACT_MATCH,
+        isSubstitution: false,
+        substituteForProductId: null,
+      })),
+      promotions: store.promos.map((promo) => ({
+        promotionId: promo,
+        name: promo,
+        type: 'DISCOUNT',
+        savings: Money.zero(),
+        requiredMembership: false,
+        requiredCard: false,
+      })),
+    })),
+    route: [
+      {
+        order: 0,
+        type: 'HOME' as const,
+        storeId: null,
+        storeName: null,
+        latitude: CDMX_DEFAULT_LOCATION.latitude,
+        longitude: CDMX_DEFAULT_LOCATION.longitude,
+        address: 'Home',
+        estimatedArrivalMinutes: 0,
+        distanceFromPreviousKm: 0,
+      },
+      ...result.stores.map((store, i) => ({
+        order: i + 1,
+        type: 'STORE' as const,
+        storeId: store.storeId,
+        storeName: store.storeName,
+        latitude: store.latitude,
+        longitude: store.longitude,
+        address: store.address,
+        estimatedArrivalMinutes: Math.round(store.distanceKm * 3),
+        distanceFromPreviousKm: store.distanceKm,
+      })),
+    ],
+    assumptions: ['Prices from backend. May vary.'],
+    warnings: result.warnings,
+    explanations: [
+      {
+        category: 'CHOICE' as const,
+        text: `Optimized across ${result.summary.storesCount} store(s).`,
+        details: null,
+      },
+    ],
+    isMock: result.isMock,
+    createdAt: new Date(),
+    expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+  });
+}
+
+// ─── Helper: Map BackendMission to ShoppingMission entity ───
+
+function mapBackendMissionToEntity(m: BackendMission): ShoppingMission {
+  return new ShoppingMission({
+    id: m.id,
+    planId: m.planId,
+    userId: m.userId,
+    status: (m.status as MissionStatus) || MissionStatus.NOT_STARTED,
+    currentStopIndex: m.currentStopIndex,
+    startedAt: m.startedAt ? new Date(m.startedAt) : null,
+    completedAt: m.completedAt ? new Date(m.completedAt) : null,
+    items: m.items.map(
+      (item: BackendMissionItem) =>
+        ({
+          id: item.id,
+          missionId: item.missionId,
+          storeId: item.storeId,
+          productId: item.productId ?? '',
+          productName: item.productName,
+          expectedPrice: item.expectedPriceCents,
+          actualPrice: item.actualPriceCents,
+          quantity: item.quantity,
+          status: (item.status as MissionItemStatus) || MissionItemStatus.PENDING,
+          substitutionProductId: item.substitutionProductId,
+          notes: item.notes,
+          foundAt: item.foundAt ? new Date(item.foundAt) : null,
+        }) as any, // MissionItem interface needs Date types but backend sends strings
+    ),
+    totalSpent: m.totalSpentCents,
+    totalSaved: m.totalSavedCents,
+    notes: m.notes,
+    createdAt: new Date(m.createdAt),
+    updatedAt: new Date(m.updatedAt),
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// AUTH STORE
+// ═══════════════════════════════════════════════════════════════════════
 
 export interface User {
   id: string;
@@ -48,9 +232,10 @@ interface AuthState {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   setUser: (user: User) => void;
   setLocation: (location: { latitude: number; longitude: number }) => void;
+  restoreSession: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
@@ -63,36 +248,113 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   login: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
-      // Mock authentication
-      const user: User = {
-        id: 'user_1',
-        email,
-        name: email.split('@')[0],
-        location: { latitude: 19.4326, longitude: -99.1332 }, // CDMX default
-      };
-      set({ user, token: 'mock_token', isAuthenticated: true, isLoading: false });
-    } catch (_error) {
-      set({ error: 'Login failed', isLoading: false });
+      const response = await authApi.login(email, password);
+
+      // Persist tokens
+      await tokenStore.setToken(response.token);
+      await tokenStore.setRefreshToken(response.refreshToken);
+      await tokenStore.setUser(response.user);
+
+      set({
+        user: {
+          id: response.user.id,
+          email: response.user.email,
+          name: response.user.name,
+          location: CDMX_DEFAULT_LOCATION,
+        },
+        token: response.token,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      // Load preferences after login
+      useSettingsStore.getState().loadFromBackend();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        // Offline fallback: create local user
+        const localUser: User = {
+          id: 'local_' + Date.now(),
+          email,
+          name: email.split('@')[0],
+          location: CDMX_DEFAULT_LOCATION,
+        };
+        await tokenStore.setUser({ id: localUser.id, email, name: localUser.name });
+        set({
+          user: localUser,
+          token: 'local_offline_token',
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
+      } else {
+        set({ error: 'Error de conexion', isLoading: false });
+      }
     }
   },
 
   register: async (email: string, password: string, name: string) => {
     set({ isLoading: true, error: null });
     try {
-      const user: User = {
-        id: uuidv4(),
-        email,
-        name,
-        location: { latitude: 19.4326, longitude: -99.1332 },
-      };
-      set({ user, token: 'mock_token', isAuthenticated: true, isLoading: false });
-    } catch (_error) {
-      set({ error: 'Registration failed', isLoading: false });
+      const response = await authApi.register(email, password, name);
+
+      await tokenStore.setToken(response.token);
+      await tokenStore.setRefreshToken(response.refreshToken);
+      await tokenStore.setUser(response.user);
+
+      set({
+        user: {
+          id: response.user.id,
+          email: response.user.email,
+          name: response.user.name,
+          location: CDMX_DEFAULT_LOCATION,
+        },
+        token: response.token,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      useSettingsStore.getState().loadFromBackend();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        // Offline fallback
+        const localUser: User = {
+          id: 'local_' + Date.now(),
+          email,
+          name,
+          location: CDMX_DEFAULT_LOCATION,
+        };
+        await tokenStore.setUser({ id: localUser.id, email, name });
+        set({
+          user: localUser,
+          token: 'local_offline_token',
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
+      } else {
+        set({ error: 'Error de conexion', isLoading: false });
+      }
     }
   },
 
-  logout: () => {
-    set({ user: null, token: null, isAuthenticated: false });
+  logout: async () => {
+    await tokenStore.clearAll();
+    set({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      error: null,
+    });
+    // Reset other stores
+    useListStore.getState().clearList();
+    useMissionStore.setState({ currentMission: null, isStarted: false });
+    useSettingsStore.setState({
+      vehicle: null,
+      vehicles: [],
+      valueOfTimePerHour: null,
+      hasMembership: false,
+      acceptedCardBrands: [],
+    });
   },
 
   setUser: (user: User) => set({ user }),
@@ -103,9 +365,56 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       set({ user: { ...user, location } });
     }
   },
+
+  restoreSession: async () => {
+    set({ isLoading: true });
+    try {
+      const storedUser = await tokenStore.getUser();
+      const token = await tokenStore.getToken();
+
+      if (storedUser && token) {
+        // Try to refresh token with backend
+        try {
+          const freshUser = await authApi.me();
+          set({
+            user: {
+              id: freshUser.id,
+              email: freshUser.email,
+              name: freshUser.name,
+              location: CDMX_DEFAULT_LOCATION,
+            },
+            token,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          // Load preferences
+          useSettingsStore.getState().loadFromBackend();
+        } catch {
+          // Backend unreachable, use stored credentials
+          set({
+            user: {
+              id: storedUser.id,
+              email: storedUser.email,
+              name: storedUser.name,
+              location: CDMX_DEFAULT_LOCATION,
+            },
+            token,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        }
+      } else {
+        set({ isLoading: false });
+      }
+    } catch {
+      set({ isLoading: false });
+    }
+  },
 }));
 
-// ─── Shopping List State ───
+// ═══════════════════════════════════════════════════════════════════════
+// SHOPPING LIST STORE
+// ═══════════════════════════════════════════════════════════════════════
 
 interface ListState {
   lists: ShoppingList[];
@@ -116,6 +425,7 @@ interface ListState {
 
   setRawInput: (input: string) => void;
   parseList: (rawInput: string) => Promise<void>;
+  loadLists: () => Promise<void>;
   updateItem: (itemId: string, updates: Partial<ShoppingItem>) => void;
   removeItem: (itemId: string) => void;
   addItem: (item: Partial<ShoppingItem>) => void;
@@ -135,11 +445,43 @@ export const useListStore = create<ListState>()((set, get) => ({
   parseList: async (rawInput: string) => {
     set({ isProcessing: true });
     try {
-      // Simple parser (will be enhanced with AI)
+      // Try backend first
+      try {
+        const title =
+          rawInput.substring(0, 50) + (rawInput.length > 50 ? '...' : '');
+        const list = await listsApi.create(title, rawInput);
+        const result = await listsApi.parse(list.id);
+
+        const items = mapBackendItemsToList(result.items, list.id);
+        const shoppingList = new ShoppingList({
+          id: result.list.id,
+          userId: result.list.userId,
+          title: result.list.title,
+          rawInput: result.list.rawInput,
+          status: result.list.status as ShoppingListStatus,
+          itemCount: result.list.itemCount,
+          parsedItemCount: result.list.parsedItemCount,
+          lastOptimizedAt: null,
+          isRecurring: result.list.isRecurring,
+          recurringInterval: result.list.recurringInterval,
+          createdAt: new Date(result.list.createdAt),
+          updatedAt: new Date(result.list.updatedAt),
+        });
+
+        set({
+          currentList: shoppingList,
+          items,
+          isProcessing: false,
+          lists: [...get().lists, shoppingList],
+        });
+        return;
+      } catch (_backendErr) {
+        // Fall through to local parsing
+      }
+
+      // Offline fallback: local parser
       const parsedItems = parseShoppingText(rawInput);
       const listId = uuidv4();
-
-      // Match each item against the product catalog
       const catalog = retailDataProvider.getAllProducts();
       const matchedItems: ShoppingItem[] = [];
 
@@ -161,7 +503,7 @@ export const useListStore = create<ListState>()((set, get) => ({
 
       const list: ShoppingList = new ShoppingList({
         id: listId,
-        userId: 'user_1',
+        userId: get()?.toString() ?? 'local',
         title: rawInput.substring(0, 50) + (rawInput.length > 50 ? '...' : ''),
         rawInput,
         status: ShoppingListStatus.PARSED,
@@ -182,6 +524,32 @@ export const useListStore = create<ListState>()((set, get) => ({
       });
     } catch (_error) {
       set({ isProcessing: false });
+    }
+  },
+
+  loadLists: async () => {
+    try {
+      const backendLists = await listsApi.getAll();
+      const mapped = backendLists.map(
+        (l) =>
+          new ShoppingList({
+            id: l.id,
+            userId: l.userId,
+            title: l.title,
+            rawInput: l.rawInput,
+            status: l.status as ShoppingListStatus,
+            itemCount: l.itemCount,
+            parsedItemCount: l.parsedItemCount,
+            lastOptimizedAt: null,
+            isRecurring: l.isRecurring,
+            recurringInterval: l.recurringInterval,
+            createdAt: new Date(l.createdAt),
+            updatedAt: new Date(l.updatedAt),
+          }),
+      );
+      set({ lists: mapped });
+    } catch {
+      // Backend unreachable — keep local lists
     }
   },
 
@@ -235,15 +603,14 @@ export const useListStore = create<ListState>()((set, get) => ({
   clearList: () => set({ items: [], currentList: null, rawInput: '' }),
 }));
 
-// ─── Optimization State ───
+// ═══════════════════════════════════════════════════════════════════════
+// OPTIMIZATION STORE
+// ═══════════════════════════════════════════════════════════════════════
 
 interface OptimizationState {
   plans: ShoppingPlan[];
   selectedPlan: ShoppingPlan | null;
   nearbyStores: Store[];
-  storePrices: Map<string, Price[]>;
-  storePromotions: Map<string, Promotion[]>;
-  storeInventory: Map<string, Inventory>;
   isOptimizing: boolean;
   optimizationMode: OptimizationMode;
   maxStores: number;
@@ -261,9 +628,6 @@ export const useOptimizationStore = create<OptimizationState>()((set, get) => ({
   plans: [],
   selectedPlan: null,
   nearbyStores: [],
-  storePrices: new Map(),
-  storePromotions: new Map(),
-  storeInventory: new Map(),
   isOptimizing: false,
   optimizationMode: OptimizationMode.BALANCED,
   maxStores: 3,
@@ -285,11 +649,25 @@ export const useOptimizationStore = create<OptimizationState>()((set, get) => ({
         return;
       }
 
-      // 1. Get nearby stores
+      // Try backend optimization first
+      try {
+        const result = await optimizeApi.run(listId, state.optimizationMode, userLocation);
+        const plan = mapBackendPlanToEntity(result, listId);
+        set({
+          plans: [plan],
+          selectedPlan: plan,
+          isOptimizing: false,
+        });
+        return;
+      } catch (_backendErr) {
+        // Fall through to local optimization
+      }
+
+      // Offline fallback: local optimization engine
       const stores = await retailDataProvider.getStoresNearby(
         userLocation.latitude,
         userLocation.longitude,
-        50, // 50km radius
+        50,
       );
 
       if (stores.length === 0) {
@@ -299,7 +677,6 @@ export const useOptimizationStore = create<OptimizationState>()((set, get) => ({
 
       set({ nearbyStores: stores });
 
-      // 2. Collect matched product IDs
       const matchedProductIds = items
         .filter((item) => item.matchedProductId !== null)
         .map((item) => item.matchedProductId as string);
@@ -309,13 +686,11 @@ export const useOptimizationStore = create<OptimizationState>()((set, get) => ({
         return;
       }
 
-      // 3. Get prices for all matched products at each store
       const pricesMap = new Map<string, import('../domain/entities/Price').Price[]>();
       const promotionsMap = new Map<string, import('../domain/entities/Promotion').Promotion[]>();
       const inventoryMap = new Map<string, import('../domain/entities/Inventory').Inventory>();
 
       for (const store of stores) {
-        // Get prices
         const storePrices = await retailDataProvider.getPrices(store.id, matchedProductIds);
         for (const price of storePrices) {
           const key = `${store.id}:${price.storeProductId.split(':')[1] ?? ''}`;
@@ -324,11 +699,9 @@ export const useOptimizationStore = create<OptimizationState>()((set, get) => ({
           pricesMap.set(key, existing);
         }
 
-        // Get promotions
         const storePromotions = await retailDataProvider.getPromotions(store.id);
         promotionsMap.set(store.id, storePromotions);
 
-        // Get inventory for each product
         for (const productId of matchedProductIds) {
           const storeProductKey = `${store.id}:${productId}`;
           const inventory = await retailDataProvider.getInventory(storeProductKey);
@@ -338,11 +711,10 @@ export const useOptimizationStore = create<OptimizationState>()((set, get) => ({
         }
       }
 
-      // 4. Build optimization input
       const vehicle = useSettingsStore.getState().vehicle;
       const input: OptimizationInput = {
         listId,
-        userId: 'user_1',
+        userId: useAuthStore.getState().user?.id ?? '',
         items,
         stores,
         prices: pricesMap,
@@ -373,10 +745,8 @@ export const useOptimizationStore = create<OptimizationState>()((set, get) => ({
         mode: state.optimizationMode,
       };
 
-      // 5. Run the optimization engine
       const result = optimizationEngine.optimize(input);
 
-      // 6. Store results
       set({
         plans: result.plans,
         selectedPlan: result.plans.length > 0 ? result.plans[0] : null,
@@ -391,15 +761,17 @@ export const useOptimizationStore = create<OptimizationState>()((set, get) => ({
   setNearbyStores: (stores: Store[]) => set({ nearbyStores: stores }),
 }));
 
-// ─── Mission State ───
+// ═══════════════════════════════════════════════════════════════════════
+// MISSION STATE
+// ═══════════════════════════════════════════════════════════════════════
 
 interface MissionState {
   currentMission: ShoppingMission | null;
   isStarted: boolean;
 
-  startMission: (plan: ShoppingPlan) => void;
-  markItem: (itemId: string, status: MissionItemStatus, price?: number) => void;
-  completeMission: () => void;
+  startMission: (plan: ShoppingPlan) => Promise<void>;
+  markItem: (itemId: string, status: MissionItemStatus, price?: number) => Promise<void>;
+  completeMission: () => Promise<void>;
   cancelMission: () => void;
 }
 
@@ -407,7 +779,21 @@ export const useMissionStore = create<MissionState>()((set, get) => ({
   currentMission: null,
   isStarted: false,
 
-  startMission: (plan: ShoppingPlan) => {
+  startMission: async (plan: ShoppingPlan) => {
+    const listId = plan.listId;
+    const planId = plan.id;
+
+    try {
+      // Create mission on backend
+      const backendMission = await missionsApi.create(planId, listId);
+      const mission = mapBackendMissionToEntity(backendMission);
+      set({ currentMission: mission, isStarted: false });
+      return;
+    } catch (_err) {
+      // Offline fallback: create locally
+    }
+
+    // Local fallback
     const items = plan.storeStops.flatMap((stop) =>
       stop.items.map((item) => ({
         id: uuidv4(),
@@ -428,7 +814,7 @@ export const useMissionStore = create<MissionState>()((set, get) => ({
     const mission = new ShoppingMission({
       id: 'mission_' + Date.now(),
       planId: plan.id,
-      userId: 'user_1',
+      userId: useAuthStore.getState().user?.id ?? '',
       status: MissionStatus.NOT_STARTED,
       currentStopIndex: 0,
       startedAt: null,
@@ -444,10 +830,26 @@ export const useMissionStore = create<MissionState>()((set, get) => ({
     set({ currentMission: mission, isStarted: false });
   },
 
-  markItem: (itemId: string, status: MissionItemStatus, price?: number) => {
+  markItem: async (itemId: string, status: MissionItemStatus, price?: number) => {
     const mission = get().currentMission;
     if (!mission) return;
 
+    // Try backend first
+    try {
+      const result = await missionsApi.updateItem(
+        mission.id,
+        itemId,
+        status,
+        price ? Math.round(price * 100) : undefined,
+      );
+      const updatedMission = mapBackendMissionToEntity(result.mission);
+      set({ currentMission: updatedMission });
+      return;
+    } catch (_err) {
+      // Fall through to local update
+    }
+
+    // Local fallback
     const updatedItems = mission.items.map((item) =>
       item.id === itemId
         ? {
@@ -468,9 +870,17 @@ export const useMissionStore = create<MissionState>()((set, get) => ({
     });
   },
 
-  completeMission: () => {
+  completeMission: async () => {
     const mission = get().currentMission;
     if (!mission) return;
+
+    // Try backend first
+    try {
+      await missionsApi.complete(mission.id);
+    } catch {
+      // Offline: complete locally
+    }
+
     mission.complete();
     set({ currentMission: mission });
   },
@@ -488,39 +898,128 @@ export const useMissionStore = create<MissionState>()((set, get) => ({
   },
 }));
 
-// ─── Settings State ───
+// ═══════════════════════════════════════════════════════════════════════
+// SETTINGS STORE
+// ═══════════════════════════════════════════════════════════════════════
+
+interface VehicleData {
+  id: string;
+  name: string;
+  make: string;
+  model: string;
+  year: number;
+  fuelType: string;
+  customEfficiency: number | null;
+  isDefault: boolean;
+}
 
 interface SettingsState {
-  vehicle: {
-    make: string;
-    model: string;
-    year: number;
-    fuelType: string;
-    customEfficiency: number | null;
-  } | null;
+  vehicle: VehicleData | null;
+  vehicles: VehicleData[];
   valueOfTimePerHour: number | null;
   hasMembership: boolean;
   acceptedCardBrands: string[];
+  optimizationMode: OptimizationMode;
+  maxBudget: number | null;
+  maxStores: number;
 
-  setVehicle: (vehicle: SettingsState['vehicle']) => void;
+  setVehicle: (vehicle: VehicleData | null) => void;
   setValueOfTimePerHour: (value: number | null) => void;
   setHasMembership: (value: boolean) => void;
   setAcceptedCardBrands: (brands: string[]) => void;
+  loadFromBackend: () => Promise<void>;
+  syncVehicle: (data: Omit<VehicleData, 'id' | 'isDefault'>) => Promise<void>;
+  loadVehicles: () => Promise<void>;
 }
 
-export const useSettingsStore = create<SettingsState>()((set) => ({
+export const useSettingsStore = create<SettingsState>()((set, get) => ({
   vehicle: null,
+  vehicles: [],
   valueOfTimePerHour: null,
   hasMembership: false,
   acceptedCardBrands: [],
+  optimizationMode: OptimizationMode.BALANCED,
+  maxBudget: null,
+  maxStores: 3,
 
   setVehicle: (vehicle) => set({ vehicle }),
   setValueOfTimePerHour: (value) => set({ valueOfTimePerHour: value }),
   setHasMembership: (value) => set({ hasMembership: value }),
   setAcceptedCardBrands: (brands) => set({ acceptedCardBrands: brands }),
+
+  loadFromBackend: async () => {
+    try {
+      const prefs = await preferencesApi.get();
+      set({
+        optimizationMode: (prefs.optimizationMode as OptimizationMode) || OptimizationMode.BALANCED,
+        maxBudget: prefs.maxBudgetCents ? prefs.maxBudgetCents / 100 : null,
+        maxStores: prefs.maxStores,
+        hasMembership: prefs.hasMembership,
+        acceptedCardBrands: prefs.acceptedCardBrands,
+        valueOfTimePerHour: prefs.valueOfTimePerHour,
+      });
+
+      // Also load vehicles
+      await get().loadVehicles();
+    } catch {
+      // Backend unreachable — keep local settings
+    }
+  },
+
+  loadVehicles: async () => {
+    try {
+      const backendVehicles = await vehiclesApi.getAll();
+      const mapped: VehicleData[] = backendVehicles.map((v) => ({
+        id: v.id,
+        name: v.name,
+        make: v.make ?? '',
+        model: v.model ?? '',
+        year: v.year ?? 0,
+        fuelType: v.fuelType,
+        customEfficiency: v.customEfficiencyKmPerLiter,
+        isDefault: v.isDefault,
+      }));
+      set({
+        vehicles: mapped,
+        vehicle: mapped.find((v) => v.isDefault) ?? mapped[0] ?? null,
+      });
+    } catch {
+      // Backend unreachable
+    }
+  },
+
+  syncVehicle: async (data) => {
+    try {
+      // Try to save to backend
+      const backend = await vehiclesApi.create({
+        name: data.name,
+        fuelType: data.fuelType,
+        make: data.make || undefined,
+        model: data.model || undefined,
+        year: data.year || undefined,
+      });
+      const newVehicle: VehicleData = {
+        id: backend.id,
+        name: backend.name,
+        make: backend.make ?? '',
+        model: backend.model ?? '',
+        year: backend.year ?? 0,
+        fuelType: backend.fuelType,
+        customEfficiency: backend.customEfficiencyKmPerLiter,
+        isDefault: backend.isDefault,
+      };
+      set({ vehicle: newVehicle });
+      await get().loadVehicles();
+    } catch {
+      // Offline: keep locally
+      set({ vehicle: { id: 'local_' + Date.now(), ...data, isDefault: true } });
+    }
+  },
 }));
 
-// ─── Navigation State ───
+// ═══════════════════════════════════════════════════════════════════════
+// NAVIGATION STATE
+// ═══════════════════════════════════════════════════════════════════════
 
 interface NavigationState {
   currentScreen: string;
@@ -552,17 +1051,19 @@ export const useNavigationStore = create<NavigationState>()((set, get) => ({
   },
 }));
 
-// ─── Helper: Match Item to Catalog Product ───
+// ═══════════════════════════════════════════════════════════════════════
+// LOCAL HELPER: Match Item to Catalog Product (for offline fallback)
+// ═══════════════════════════════════════════════════════════════════════
 
 function matchItemToProduct(
   item: ShoppingItem,
-  catalog: Product[],
-): { product: Product; level: MatchLevel } | null {
+  catalog: import('../domain/entities/Product').Product[],
+): { product: import('../domain/entities/Product').Product; level: MatchLevel } | null {
   const itemName = (item.normalizedName ?? item.rawInput).toLowerCase();
   const itemBrand = item.brand?.toLowerCase() ?? null;
   const itemCategory = item.category?.toLowerCase() ?? null;
 
-  let bestMatch: { product: Product; score: number; level: MatchLevel } | null = null;
+  let bestMatch: { product: import('../domain/entities/Product').Product; score: number; level: MatchLevel } | null = null;
 
   for (const product of catalog) {
     let score = 0;
@@ -570,7 +1071,6 @@ function matchItemToProduct(
     const productBrand = product.brand.toLowerCase();
     const productCategory = product.category.toLowerCase();
 
-    // Exact canonical name match: highest score
     if (productName === itemName) {
       score += 100;
     } else if (productName.includes(itemName) || itemName.includes(productName)) {
@@ -579,14 +1079,12 @@ function matchItemToProduct(
       score += 30;
     }
 
-    // Brand match
     if (itemBrand && productBrand.toLowerCase() === itemBrand) {
       score += 30;
     } else if (itemBrand && productBrand.toLowerCase().includes(itemBrand)) {
       score += 15;
     }
 
-    // Category match
     if (itemCategory && productCategory === itemCategory) {
       score += 10;
     }
@@ -615,7 +1113,9 @@ function matchItemToProduct(
   return { product: bestMatch.product, level: bestMatch.level };
 }
 
-// ─── Helper: Parse Shopping Text ───
+// ═══════════════════════════════════════════════════════════════════════
+// LOCAL HELPER: Parse Shopping Text (for offline fallback)
+// ═══════════════════════════════════════════════════════════════════════
 
 function parseShoppingText(rawText: string): ShoppingItem[] {
   const lines = rawText
@@ -666,7 +1166,6 @@ function parseSingleItem(text: string): {
   let brand: string | null = null;
   let size: string | null = null;
 
-  // Common brands in Mexico
   const knownBrands = [
     'Lala',
     'Bimbo',
@@ -683,15 +1182,14 @@ function parseSingleItem(text: string): {
     'Ciel',
     'Pepsi',
     'Herdez',
-    'Nestlé',
-    'La Costeña',
+    'Nestle',
+    'La Costena',
     'Valentina',
     'Bonafina',
     'Santa Clara',
     'Alpura',
   ];
 
-  // Extract quantity patterns
   const quantityPatterns = [
     /(\d+(?:\.\d+)?)\s*(litros?|lt|l|ml|kilos?|kg|gramos?|g|onzas?|oz|piezas?|pzs?|pzas?|rollos?|paquetes?|pcks?|cajas?|latas?)/i,
     /^(\d+)\s+(.+)$/,
@@ -703,7 +1201,6 @@ function parseSingleItem(text: string): {
       quantity = parseFloat(match[1]);
       const unitStr = match[2].toLowerCase();
 
-      // Normalize unit
       if (unitStr.startsWith('lit') || unitStr === 'lt' || unitStr === 'l') {
         unit = 'litro';
       } else if (unitStr.startsWith('ml')) {
@@ -728,7 +1225,6 @@ function parseSingleItem(text: string): {
     }
   }
 
-  // Extract brand
   for (const b of knownBrands) {
     if (text.toLowerCase().includes(b.toLowerCase())) {
       brand = b;
@@ -736,7 +1232,6 @@ function parseSingleItem(text: string): {
     }
   }
 
-  // Clean name
   const name = text
     .replace(
       /\d+(?:\.\d+)?\s*(litros?|lt|l|ml|kilos?|kg|gramos?|g|onzas?|oz|piezas?|pzs?|pzas?|rollos?|paquetes?|pcks?|cajas?|latas?)/gi,
@@ -745,18 +1240,17 @@ function parseSingleItem(text: string): {
     .replace(/^de\s+/i, '')
     .trim();
 
-  // Detect category
   let category: string | null = null;
   const categoryKeywords: Record<string, string[]> = {
     Dairy: ['leche', 'yogurt', 'queso', 'crema', 'huevos', 'mantequilla'],
     Meat: ['pollo', 'carne', 'res', 'cerdo', 'pechuga', 'costilla'],
     Grains: ['arroz', 'pasta', 'frijol', 'avena', 'trigo'],
     Bakery: ['pan', 'tortilla', 'bolillo'],
-    Beverages: ['agua', 'jugo', 'refresco', 'cerveza', 'café', 'té'],
-    Cleaning: ['detergente', 'jabón', 'fabuloso', 'cloro', 'papel', 'servilleta'],
-    PersonalCare: ['shampoo', 'jabón', 'crema', 'pasta', 'cepillo'],
+    Beverages: ['agua', 'jugo', 'refresco', 'cerveza', 'cafe', 'te'],
+    Cleaning: ['detergente', 'jabon', 'fabuloso', 'cloro', 'papel', 'servilleta'],
+    PersonalCare: ['shampoo', 'jabon', 'crema', 'pasta', 'cepillo'],
     Snacks: ['papas', 'galletas', 'chocolate', 'candy'],
-    Fruits: ['manzana', 'plátano', 'naranja', 'limón', 'jitomate', 'cebolla'],
+    Fruits: ['manzana', 'platano', 'naranja', 'limon', 'jitomate', 'cebolla'],
   };
 
   for (const [cat, keywords] of Object.entries(categoryKeywords)) {
@@ -775,99 +1269,4 @@ function parseSingleItem(text: string): {
     size,
     category,
   };
-}
-
-// ─── Helper: Create Mock Plan ───
-
-function createMockPlan(
-  items: ShoppingItem[],
-  stores: Store[],
-  mode: OptimizationMode,
-): ShoppingPlan {
-  const store = stores[0];
-  const totalProductCost = Money.fromDecimal(items.length * 45); // $45 average per item
-  const transportCost = Money.fromDecimal(15);
-  const effectiveCost = totalProductCost.add(transportCost);
-  const baselineCost = Money.fromDecimal(items.length * 55);
-
-  return new ShoppingPlan({
-    id: 'plan_' + Date.now(),
-    userId: 'user_1',
-    listId: '',
-    mode,
-    totalProductCost,
-    totalTransportCost: transportCost,
-    totalTimeMinutes: 25,
-    totalDistanceKm: 5.2,
-    effectiveTotalCost: effectiveCost,
-    estimatedSavings: baselineCost.difference(effectiveCost),
-    baselineCost,
-    baselineDescription: 'Estimated cost at most expensive store without promotions',
-    confidence: PlanConfidence.MEDIUM,
-    storeStops: [
-      {
-        storeId: store.id,
-        storeName: store.name,
-        retailerName: store.retailerName,
-        address: store.getFullAddress(),
-        latitude: store.latitude,
-        longitude: store.longitude,
-        productCost: totalProductCost,
-        transportCost,
-        items: items.map((item) => ({
-          shoppingItemId: item.id,
-          productId: 'prod_' + Date.now(),
-          productName: item.normalizedName ?? item.rawInput,
-          brand: item.brand ?? '',
-          quantity: item.quantity,
-          unit: item.unit,
-          originalPrice: Money.fromDecimal(50),
-          effectivePrice: Money.fromDecimal(45),
-          savings: Money.fromDecimal(5),
-          matchLevel: item.matchLevel,
-          isSubstitution: false,
-          substituteForProductId: null,
-        })),
-        promotions: [],
-      },
-    ],
-    route: [
-      {
-        order: 0,
-        type: 'HOME',
-        storeId: null,
-        storeName: null,
-        latitude: 19.4326,
-        longitude: -99.1332,
-        address: 'Home',
-        estimatedArrivalMinutes: 0,
-        distanceFromPreviousKm: 0,
-      },
-      {
-        order: 1,
-        type: 'STORE',
-        storeId: store.id,
-        storeName: store.name,
-        latitude: store.latitude,
-        longitude: store.longitude,
-        address: store.getFullAddress(),
-        estimatedArrivalMinutes: 15,
-        distanceFromPreviousKm: 2.6,
-      },
-    ],
-    assumptions: ['Prices are as observed and may vary.', 'Travel times are estimates.'],
-    warnings: items.some((i) => !i.hasMatch())
-      ? ['Some items could not be matched to our catalog.']
-      : [],
-    explanations: [
-      {
-        category: 'CHOICE',
-        text: `We recommend ${store.retailerName} because all your items are available there.`,
-        details: null,
-      },
-    ],
-    isMock: true,
-    createdAt: new Date(),
-    expiresAt: new Date(Date.now() + 30 * 60 * 1000),
-  });
 }

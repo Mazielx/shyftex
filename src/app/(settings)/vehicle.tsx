@@ -17,7 +17,7 @@ import { useSettingsStore } from '../../stores/AppStore';
 const FUEL_TYPES = ['Magna', 'Premium', 'Diesel', 'Diesel Premium'];
 
 export default function VehicleScreen() {
-  const { vehicle, setVehicle } = useSettingsStore();
+  const { vehicle, syncVehicle } = useSettingsStore();
   const [make, setMake] = useState(vehicle?.make ?? '');
   const [model, setModel] = useState(vehicle?.model ?? '');
   const [year, setYear] = useState(vehicle?.year?.toString() ?? '');
@@ -30,7 +30,8 @@ export default function VehicleScreen() {
       return;
     }
 
-    setVehicle({
+    syncVehicle({
+      name: `${make.trim()} ${model.trim()}`,
       make: make.trim(),
       model: model.trim(),
       year: parseInt(year) || new Date().getFullYear(),

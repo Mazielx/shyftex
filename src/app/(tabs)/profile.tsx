@@ -12,10 +12,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { colors, spacing, borderRadius, shadows, typography } from '../../config/theme';
 import { useAuthStore, useSettingsStore } from '../../stores/AppStore';
+import { useLocation } from '../../hooks/useLocation';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
   const settings = useSettingsStore();
+  const { location, hasPermission, refreshLocation } = useLocation();
 
   const handleLogout = () => {
     Alert.alert('Cerrar sesión', '¿Estás seguro de que quieres cerrar sesión?', [
@@ -99,8 +101,17 @@ export default function ProfileScreen() {
           <SettingsItem
             icon="location"
             label="Ubicación"
-            value={user?.location ? 'Configurada' : 'No configurada'}
-            onPress={() => {}}
+            value={
+              location
+                ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
+                : hasPermission
+                  ? 'Obteniendo...'
+                  : 'Sin permiso'
+            }
+            onPress={() => {
+              refreshLocation();
+              Alert.alert('Ubicación', 'Actualizando ubicación...');
+            }}
           />
           <SettingsItem
             icon="notifications"
