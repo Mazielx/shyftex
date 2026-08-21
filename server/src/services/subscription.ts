@@ -8,7 +8,7 @@ import { db } from './database.js';
 import { ForbiddenError } from '../utils/errors.js';
 
 const STRIPE_SECRET_KEY = process.env['STRIPE_SECRET_KEY'];
-const APP_URL = process.env['APP_URL'] ?? 'http://localhost:3000';
+const APP_URL = process.env['APP_URL'] ?? 'http://localhost:4000';
 
 const FREE_TIER_LIMITS = {
   optimizationsPerMonth: 5,

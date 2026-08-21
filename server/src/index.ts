@@ -15,7 +15,7 @@ import subscriptionRoutes from './routes/subscription.js';
 import { connectDatabase, disconnectDatabase } from './lib/prisma.js';
 import { seedDatabase } from './seed.js';
 
-const PORT = parseInt(process.env['PORT'] ?? '3000', 10);
+const PORT = parseInt(process.env['PORT'] ?? '4000', 10);
 const HOST = process.env['HOST'] ?? '0.0.0.0';
 const JWT_SECRET = process.env['JWT_SECRET'] ?? 'dev-secret-change-in-production';
 

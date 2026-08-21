@@ -6,13 +6,13 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "4000:4000"
     environment:
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=4000
       - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET in .env}
       - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@db:5432/shopping_optimizer}
-      - APP_URL=${APP_URL:-http://localhost:3000}
+      - APP_URL=${APP_URL:-http://localhost:4000}
       - CORS_ORIGIN=${CORS_ORIGIN:-*}
       # - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
       # - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
