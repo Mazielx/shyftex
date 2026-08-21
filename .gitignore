@@ -67,3 +67,4 @@ prisma/dev.db
 *.secret
 *.key
 secrets/
+server/src/generated/
