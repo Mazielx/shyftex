@@ -1,8 +1,12 @@
 import 'dotenv/config';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+
 import jwt from '@fastify/jwt';
 import rateLimit from '@fastify/rate-limit';
+import { readFileSync } from 'fs';
 import authRoutes from './routes/auth.js';
 import listsRoutes from './routes/lists.js';
 import storesRoutes from './routes/stores.js';
@@ -15,6 +19,9 @@ import subscriptionRoutes from './routes/subscription.js';
 import { connectDatabase, disconnectDatabase } from './lib/prisma.js';
 import { seedDatabase } from './seed.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const PORT = parseInt(process.env['PORT'] ?? '4000', 10);
 const HOST = process.env['HOST'] ?? '0.0.0.0';
 const JWT_SECRET = process.env['JWT_SECRET'] ?? 'dev-secret-change-in-production';
@@ -26,8 +33,9 @@ const app = Fastify({
 });
 
 await app.register(cors, {
-  origin: process.env['CORS_ORIGIN'] ?? true,
-  credentials: true,
+  origin: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 });
 
 await app.register(jwt, {
@@ -52,6 +60,17 @@ await app.register(subscriptionRoutes);
 
 app.get('/api/v1/health', async () => {
   return { status: 'ok', timestamp: new Date().toISOString() };
+});
+
+// Serve app.html from project root
+const appHtmlPath = join(__dirname, '..', '..', 'app.html');
+app.get('/', async (_request, reply) => {
+  try {
+    const html = readFileSync(appHtmlPath, 'utf-8');
+    return reply.type('text/html').send(html);
+  } catch {
+    return reply.status(404).send({ error: 'app.html not found' });
+  }
 });
 
 app.setErrorHandler((error: Error & { statusCode?: number; code?: string }, _request, reply) => {

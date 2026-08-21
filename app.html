@@ -463,7 +463,9 @@ textarea.input{min-height:100px;resize:none;line-height:1.5}
    ═══════════════════════════════════════════════════ */
 
 // ─── API CLIENT ───
-const API_BASE = 'http://localhost:4000';
+const API_BASE = (location.protocol === 'file:' || location.hostname === '') 
+  ? 'http://localhost:4000' 
+  : location.origin;
 
 async function api(path, opts = {}) {
   const headers = { 'Content-Type': 'application/json', ...opts.headers };
