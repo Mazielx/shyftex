@@ -631,6 +631,11 @@ function tabBar(active){
 }
 
 // ─── AUTH ───
+// Local (offline) auth: creates a local user so the demo works without backend.
+function localAuth(name,email){
+  const user={id:'user_'+Date.now(),name,email,createdAt:new Date().toISOString()};
+  return{user,token:'local_'+Date.now(),refreshToken:'local_'+Date.now()};
+}
 async function doLogin(){
   const email=($('loginEmail').value||'').trim();
   const password=$('loginPass').value||'';
@@ -639,12 +644,15 @@ async function doLogin(){
   try{
     const data=await api('/api/v1/auth/login',{method:'POST',body:JSON.stringify({email,password})});
     D.token=data.token;D.refreshToken=data.refreshToken;D.user=data.user;
-    saveState();
-    loadStores();
-    if(!D.onboarded){go('s-onboard')}
-    else{go('s-home')}
+    saveState();loadStores();
+    if(!D.onboarded){go('s-onboard')}else{go('s-home')}
   }catch(err){
-    showToast(err.message);
+    // Offline fallback: create local user so demo always works
+    const fallback=localAuth(email.split('@')[0],email);
+    D.token=fallback.token;D.refreshToken=fallback.refreshToken;D.user=fallback.user;
+    saveState();loadStores();
+    showToast('Modo demo (sin servidor)');
+    if(!D.onboarded){go('s-onboard')}else{go('s-home')}
   }
 }
 async function doRegister(){
@@ -657,12 +665,14 @@ async function doRegister(){
   try{
     const data=await api('/api/v1/auth/register',{method:'POST',body:JSON.stringify({email,password,name})});
     D.token=data.token;D.refreshToken=data.refreshToken;D.user=data.user;
-    D.onboarded=false;
-    saveState();
-    loadStores();
-    go('s-onboard');
+    D.onboarded=false;saveState();loadStores();go('s-onboard');
   }catch(err){
-    showToast(err.message);
+    // Offline fallback: create local user so demo always works
+    const fallback=localAuth(name,email);
+    D.token=fallback.token;D.refreshToken=fallback.refreshToken;D.user=fallback.user;
+    D.onboarded=false;saveState();loadStores();
+    showToast('Modo demo (sin servidor)');
+    go('s-onboard');
   }
 }
 function doLogout(){D.user=null;D.token=null;D.refreshToken=null;D.currentListId=null;D.onboarded=false;saveState();go('s-login');showToast('Sesión cerrada')}
