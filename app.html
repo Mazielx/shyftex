@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light" data-accent="blue">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>SHYFTEX</title>
+<style>
+/* ═══════════════════════════════════════════
+   THEME SYSTEM — Light / Dark / System
+   ═══════════════════════════════════════════ */
+:root,[data-theme="light"] {
+  --bg:#FAFBFC;--surface:#FFFFFF;--surface2:#F4F5F7;--surface3:#E8EAED;
+  --border:#E4E6EA;--border2:#D0D3D8;
+  --text:#1A1D21;--text2:#5F6B7A;--text3:#8B95A5;--text-inv:#FFFFFF;
+  --shadow:0 1px 2px rgba(0,0,0,.04);--shadow2:0 2px 8px rgba(0,0,0,.06);
+  --shadow3:0 4px 16px rgba(0,0,0,.08);
+  --ok:#16A34A;--ok-l:#F0FDF4;--warn:#D97706;--warn-l:#FFFBEB;
+  --err:#DC2626;--err-l:#FEF2F2;--info:#2563EB;--info-l:#EFF6FF;
+  --overlay:rgba(0,0,0,.35);
+}
+[data-theme="dark"] {
+  --bg:#111318;--surface:#1A1D23;--surface2:#242830;--surface3:#2E333C;
+  --border:#2A2F38;--border2:#3A404A;
+  --text:#E8EAED;--text2:#9AA1B0;--text3:#6B7280;--text-inv:#111318;
+  --shadow:0 1px 2px rgba(0,0,0,.2);--shadow2:0 2px 8px rgba(0,0,0,.25);
+  --shadow3:0 4px 16px rgba(0,0,0,.35);
+  --ok:#22C55E;--ok-l:#052E16;--warn:#FBBF24;--warn-l:#422006;
+  --err:#EF4444;--err-l:#450A0A;--info:#3B82F6;--info-l:#172554;
+  --overlay:rgba(0,0,0,.5);
+}
+/* Accent color palettes */
+[data-accent="green"]  {--acc:#1A8F50;--acc-l:#F0FAF4;--acc-d:#157A43;--acc-t:#106336;}
+[data-accent="blue"]   {--acc:#2563EB;--acc-l:#F0F5FF;--acc-d:#1D4ED8;--acc-t:#1E3A8A;}
+[data-accent="red"]    {--acc:#C43030;--acc-l:#FEF2F2;--acc-d:#A82828;--acc-t:#8B2020;}
+[data-accent="pink"]   {--acc:#C94283;--acc-l:#FDF2F8;--acc-d:#AB3670;--acc-t:#8E2B5D;}
+[data-accent="purple"] {--acc:#7C3AED;--acc-l:#F5F0FF;--acc-d:#6C2AD4;--acc-t:#5B20BA;}
+[data-accent="orange"] {--acc:#D97706;--acc-l:#FFF8F0;--acc-d:#C26A05;--acc-t:#A35804;}
+[data-accent="yellow"] {--acc:#B8941A;--acc-l:#FEFCE8;--acc-d:#A08015;--acc-t:#886C10;}
+[data-accent="gold"]   {--acc:#A06A1A;--acc-l:#FFFBEB;--acc-d:#8C5C15;--acc-t:#744D10;}
+
+/* ═══════════════════════════════════════════
+   BASE RESET & TYPOGRAPHY
+   ═══════════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue','Segoe UI',Roboto,sans-serif;background:#E8EAED;display:flex;justify-content:center;align-items:center;-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+
+/* ═══════════════════════════════════════════
+   PHONE FRAME
+   ═══════════════════════════════════════════ */
+.phone{width:390px;height:844px;background:var(--bg);border-radius:40px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 2px 20px rgba(0,0,0,.1);display:flex;flex-direction:column;position:relative}
+.phone::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:30px;background:#000;border-radius:0 0 20px 20px;z-index:100}
+
+/* ═══════════════════════════════════════════
+   STATUS BAR
+   ═══════════════════════════════════════════ */
+.statusbar{height:54px;background:var(--surface);display:flex;align-items:flex-end;justify-content:space-between;padding:0 28px 8px;color:var(--text);font-size:13px;font-weight:600;flex-shrink:0;z-index:50}
+
+/* ═══════════════════════════════════════════
+   SCREEN CONTAINER
+   ═══════════════════════════════════════════ */
+.scroller{flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.scroller::-webkit-scrollbar{display:none}
+.screen{display:none;flex-direction:column;min-height:100%}
+.screen.on{display:flex}
+
+/* ═══════════════════════════════════════════
+   NAVIGATION BAR (top)
+   ═══════════════════════════════════════════ */
+.navbar{background:var(--surface);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.navbar h2{flex:1;font-size:16px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+.icon-btn{background:none;border:none;cursor:pointer;padding:6px;color:var(--text);display:flex;align-items:center;justify-content:center;border-radius:10px;transition:background .15s}
+.icon-btn:active{background:var(--surface2)}
+
+/* ═══════════════════════════════════════════
+   TAB BAR (bottom)
+   ═══════════════════════════════════════════ */
+.tabbar{height:56px;background:var(--surface);border-top:1px solid var(--border);display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--text3);transition:color .2s;border:none;background:none;-webkit-tap-highlight-color:transparent}
+.tab.on{color:var(--acc)}
+.tab svg{width:20px;height:20px}
+.tab span{font-size:9px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+
+/* ═══════════════════════════════════════════
+   CONTENT AREA
+   ═══════════════════════════════════════════ */
+.content{flex:1;overflow-y:auto;padding:16px;padding-bottom:24px}
+.content::-webkit-scrollbar{display:none}
+
+/* ═══════════════════════════════════════════
+   CARDS
+   ═══════════════════════════════════════════ */
+.card{background:var(--surface);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid var(--border);box-shadow:var(--shadow)}
+
+/* ═══════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════ */
+.btn{border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s;font-family:inherit;-webkit-tap-highlight-color:transparent;letter-spacing:.01em}
+.btn:active{transform:scale(.98)}
+.btn-p{background:var(--acc);color:#fff;padding:13px 20px;width:100%}
+.btn-p:hover{background:var(--acc-d)}
+.btn-p:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-s{background:var(--surface);color:var(--acc);border:1px solid var(--border);padding:11px 20px;width:100%}
+.btn-ghost{background:none;color:var(--acc);padding:10px 16px;width:100%}
+.btn-danger{background:var(--err);color:#fff;padding:11px 20px;width:100%}
+.btn-icon{width:32px;height:32px;border-radius:8px;padding:0;flex-shrink:0}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:7px}
+
+/* ═══════════════════════════════════════════
+   INPUTS
+   ═══════════════════════════════════════════ */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;letter-spacing:.02em;text-transform:uppercase}
+.field label em{color:var(--err);font-style:normal}
+.input{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--surface);transition:border-color .2s;font-family:inherit}
+.input:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 2px var(--acc-l)}
+textarea.input{min-height:100px;resize:none;line-height:1.5}
+.input-hint{font-size:11px;color:var(--text3);margin-top:3px}
+
+/* ═══════════════════════════════════════════
+   BADGES & TAGS
+   ═══════════════════════════════════════════ */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:600;letter-spacing:.02em}
+.badge-ok{background:var(--ok-l);color:var(--ok)}
+.badge-info{background:var(--info-l);color:var(--info)}
+.badge-warn{background:var(--warn-l);color:var(--warn)}
+.badge-err{background:var(--err-l);color:var(--err)}
+.badge-muted{background:var(--surface2);color:var(--text2)}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:500;background:var(--acc-l);color:var(--acc)}
+
+/* ═══════════════════════════════════════════
+   ITEM CARDS
+   ═══════════════════════════════════════════ */
+.item{background:var(--surface);border-radius:10px;padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;border:1px solid var(--border);cursor:pointer;transition:background .15s}
+.item:active{background:var(--surface2)}
+.item .ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.item .info{flex:1;min-width:0}
+.item .name{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .meta{font-size:11px;color:var(--text3);margin-top:1px}
+.item .right{text-align:right;flex-shrink:0}
+.item .price{font-size:14px;font-weight:700;color:var(--acc)}
+.item .old{font-size:10px;color:var(--text3);text-decoration:line-through}
+
+/* ═══════════════════════════════════════════
+   SETTINGS
+   ═══════════════════════════════════════════ */
+.sg{margin-bottom:16px}
+.sg-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:0 4px 6px}
+.si{display:flex;align-items:center;gap:10px;background:var(--surface);padding:12px 14px;border-radius:10px;margin-bottom:3px;border:1px solid var(--border);cursor:pointer;transition:background .15s}
+.si:active{background:var(--surface2)}
+.si .s-ic{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;background:var(--acc-l);color:var(--acc);flex-shrink:0}
+.si .s-ic svg{width:16px;height:16px}
+.si .s-body{flex:1}
+.si .s-title{font-size:14px;font-weight:500;color:var(--text)}
+.si .s-desc{font-size:11px;color:var(--text3);margin-top:1px}
+.si .s-val{font-size:12px;color:var(--text2);font-weight:500;margin-right:4px}
+.si .s-arr{color:var(--text3);display:flex}
+
+/* ═══════════════════════════════════════════
+   HERO CTA
+   ═══════════════════════════════════════════ */
+.hero{background:var(--acc);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;color:#fff;margin-bottom:16px;transition:transform .1s;border:none;text-align:left;width:100%;font-family:inherit}
+.hero:active{transform:scale(.98)}
+.hero .h-body{flex:1}
+.hero .h-title{font-size:14px;font-weight:600}
+.hero .h-sub{font-size:11px;opacity:.8;margin-top:1px}
+.hero .h-arrow{opacity:.6}
+
+/* ═══════════════════════════════════════════
+   STATS ROW
+   ═══════════════════════════════════════════ */
+.stats{display:flex;gap:8px;margin-bottom:16px}
+.stat{flex:1;background:var(--surface);border-radius:8px;padding:10px 8px;text-align:center;border:1px solid var(--border)}
+.stat .sv{font-size:18px;font-weight:700;color:var(--text)}
+.stat .sl{font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
+
+/* ═══════════════════════════════════════════
+   SAVINGS BANNER
+   ═══════════════════════════════════════════ */
+.savings{background:var(--acc);border-radius:10px;padding:14px;color:#fff;margin-bottom:12px}
+.savings .s-label{font-size:12px;opacity:.8}
+.savings .s-amount{font-size:28px;font-weight:700;margin-top:1px}
+
+/* ═══════════════════════════════════════════
+   ROUTE METRICS
+   ═══════════════════════════════════════════ */
+.metrics{display:flex;justify-content:space-around;padding:14px 0}
+.metric{text-align:center}
+.metric .mv{font-size:15px;font-weight:700;color:var(--text)}
+.metric .ml{font-size:10px;color:var(--text3);margin-top:1px;text-transform:uppercase;letter-spacing:.03em}
+
+/* ═══════════════════════════════════════════
+   STORE STOPS
+   ═══════════════════════════════════════════ */
+.stop{background:var(--surface);border-radius:10px;padding:14px;margin-bottom:8px;border:1px solid var(--border)}
+.stop-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.stop-num{width:24px;height:24px;border-radius:7px;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.stop-body{flex:1}
+.stop-name{font-size:15px;font-weight:600;color:var(--text)}
+.stop-addr{font-size:12px;color:var(--text3)}
+.stop-cost{font-size:16px;font-weight:700;color:var(--acc);flex-shrink:0}
+.stop-items{border-top:1px solid var(--border);padding-top:10px;margin-top:4px}
+.si-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px}
+.si-row .si-dot{color:var(--acc);font-size:10px}
+.si-row .si-n{flex:1;color:var(--text)}
+.si-row .si-q{color:var(--text3)}
+.si-row .si-p{font-weight:600;color:var(--text)}
+.promo-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+
+/* ═══════════════════════════════════════════
+   SUMMARY ROWS
+   ═══════════════════════════════════════════ */
+.sr{display:flex;justify-content:space-between;padding:6px 0}
+.sr .sl{font-size:14px;color:var(--text2)}
+.sr .sv{font-size:14px;font-weight:500;color:var(--text)}
+.sr-total{border-top:1px solid var(--border);margin-top:4px;padding-top:10px}
+.sr-total .sl{font-weight:600;color:var(--text)}
+.sr-total .sv{font-weight:700;font-size:16px;color:var(--acc)}
+
+/* ═══════════════════════════════════════════
+   MISSION
+   ═══════════════════════════════════════════ */
+.prog{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:6px}
+.prog-fill{height:100%;background:var(--acc);border-radius:3px;transition:width .3s}
+.prog-text{font-size:12px;color:var(--text3);text-align:center;margin-bottom:12px}
+.mi{background:var(--surface);border-radius:10px;padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;border:1px solid var(--border)}
+.mi .mi-info{flex:1}
+.mi .mi-name{font-size:13px;font-weight:500;color:var(--text)}
+.mi .mi-sub{font-size:11px;color:var(--text3)}
+.mi .mi-acts{display:flex;gap:6px}
+.mi-btn{width:30px;height:30px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s}
+.mi-btn:active{transform:scale(.9)}
+.mi-btn.ok{background:var(--ok);color:#fff}
+.mi-btn.no{background:var(--err);color:#fff}
+.mi.found{background:var(--ok-l);border-color:var(--ok)}
+.mi.missed{background:var(--err-l);border-color:var(--err)}
+
+/* ═══════════════════════════════════════════
+   EXPLANATION
+   ═══════════════════════════════════════════ */
+.exp{background:var(--surface);border-radius:8px;padding:10px 12px;display:flex;gap:8px;margin-bottom:5px;border:1px solid var(--border)}
+.exp .exp-icon{flex-shrink:0;color:var(--acc);margin-top:1px}
+.exp .exp-text{font-size:12px;color:var(--text2);line-height:1.4}
+
+/* ═══════════════════════════════════════════
+   CONFIDENCE
+   ═══════════════════════════════════════════ */
+.conf{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;margin-bottom:12px}
+.conf.high{background:var(--ok-l);color:var(--ok)}
+.conf.med{background:var(--info-l);color:var(--info)}
+
+/* ═══════════════════════════════════════════
+   AUTH
+   ═══════════════════════════════════════════ */
+.auth{padding:32px 24px;display:flex;flex-direction:column;justify-content:center;min-height:100%}
+.auth-title{text-align:center;font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.auth-sub{text-align:center;font-size:13px;color:var(--text3);margin-top:4px;margin-bottom:28px}
+.auth-field{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0 13px;margin-bottom:8px;transition:border-color .2s}
+.auth-field:focus-within{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc-l)}
+.auth-field svg{width:16px;height:16px;color:var(--text3);margin-right:10px;flex-shrink:0}
+.auth-field input{flex:1;border:none;padding:12px 0;font-size:14px;color:var(--text);background:transparent;outline:none;font-family:inherit}
+.auth-link{text-align:center;margin-top:14px;font-size:13px;color:var(--text3)}
+.auth-link a{color:var(--acc);font-weight:600;text-decoration:none;cursor:pointer}
+
+/* ═══════════════════════════════════════════
+   ONBOARDING
+   ═══════════════════════════════════════════ */
+.onboard{padding:28px 24px;display:flex;flex-direction:column;min-height:100%}
+.onboard .step-indicator{display:flex;gap:5px;margin-bottom:28px;justify-content:center}
+.onboard .step-dot{width:6px;height:6px;border-radius:3px;background:var(--surface3);transition:all .3s}
+.onboard .step-dot.on{background:var(--acc);width:20px}
+.onboard .step-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:-.02em}
+.onboard .step-desc{font-size:14px;color:var(--text3);line-height:1.4;margin-bottom:24px}
+.onboard .step-body{flex:1}
+.onboard .step-footer{padding-top:16px}
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.opt-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;text-align:center;transition:all .2s}
+.opt-card:active{transform:scale(.98)}
+.opt-card.sel{border-color:var(--acc);background:var(--acc-l)}
+.opt-card .oc-icon{font-size:22px;margin-bottom:4px}
+.opt-card .oc-label{font-size:12px;font-weight:600;color:var(--text)}
+.opt-card .oc-desc{font-size:11px;color:var(--text3);margin-top:2px}
+.color-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.color-opt{width:100%;aspect-ratio:1;border-radius:10px;cursor:pointer;border:2px solid transparent;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.color-opt:active{transform:scale(.9)}
+.color-opt.sel{border-color:var(--text);box-shadow:var(--shadow)}
+.color-opt .co-check{color:#fff;font-size:18px;display:none}
+.color-opt.sel .co-check{display:block}
+
+/* ═══════════════════════════════════════════
+   IMAGE UPLOAD
+   ═══════════════════════════════════════════ */
+.upload-zone{border:2px dashed var(--border2);border-radius:12px;padding:24px 16px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px}
+.upload-zone:hover{border-color:var(--acc);background:var(--acc-l)}
+.upload-zone svg{width:28px;height:28px;color:var(--text3);margin-bottom:8px}
+.upload-zone .uz-title{font-size:15px;font-weight:600;color:var(--text)}
+.upload-zone .uz-sub{font-size:13px;color:var(--text3);margin-top:4px}
+.upload-divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text3);font-size:13px}
+.upload-divider::before,.upload-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ═══════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════ */
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 20px;border-radius:10px;font-size:14px;font-weight:500;box-shadow:var(--shadow3);z-index:1000;animation:toastUp .3s ease;pointer-events:none}
+@keyframes toastUp{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ═══════════════════════════════════════════
+   LOADING
+   ═══════════════════════════════════════════ */
+.loader{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 16px;gap:12px}
+.spinner{width:32px;height:32px;border:3px solid var(--surface3);border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-text{font-size:14px;color:var(--text3)}
+
+/* ═══════════════════════════════════════════
+   PROFILE HEADER
+   ═══════════════════════════════════════════ */
+.profile-hdr{text-align:center;padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.avatar{width:48px;height:48px;border-radius:12px;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;margin:0 auto 8px}
+.profile-name{font-size:16px;font-weight:600;color:var(--text)}
+.profile-email{font-size:12px;color:var(--text3);margin-top:1px}
+
+/* ═══════════════════════════════════════════
+   FEATURES GRID
+   ═══════════════════════════════════════════ */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.fcard{background:var(--surface);border-radius:8px;padding:11px;border:1px solid var(--border)}
+.fcard .fc-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;margin-bottom:5px}
+.fcard .fc-icon svg{width:12px;height:12px}
+.fcard .fc-title{font-size:12px;font-weight:600;color:var(--text)}
+.fcard .fc-desc{font-size:10px;color:var(--text3);margin-top:1px;line-height:1.3}
+
+/* ═══════════════════════════════════════════
+   TIP
+   ═══════════════════════════════════════════ */
+.tip{background:var(--surface);border-radius:8px;padding:11px 12px;display:flex;gap:8px;align-items:flex-start;border:1px solid var(--border)}
+.tip .tip-text{font-size:12px;color:var(--text3);line-height:1.4}
+.tip .tip-text strong{color:var(--text2)}
+
+/* ═══════════════════════════════════════════
+   BOTTOM BAR
+   ═══════════════════════════════════════════ */
+.bottom{padding:12px 16px 20px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
+
+/* ═══════════════════════════════════════════
+   ASSUMPTIONS
+   ═══════════════════════════════════════════ */
+.assume{display:flex;gap:8px;padding:4px 0;font-size:12px;color:var(--text3)}
+.assume::before{content:'-';color:var(--text3)}
+
+/* ═══════════════════════════════════════════
+   SECTION TITLE
+   ═══════════════════════════════════════════ */
+.sec-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+
+/* ═══════════════════════════════════════════
+   VEHICLE LIST
+   ═══════════════════════════════════════════ */
+.vehicle-card{background:var(--surface);border-radius:12px;padding:14px 16px;margin-bottom:8px;border:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.vehicle-card .vc-icon{width:34px;height:34px;border-radius:9px;background:var(--acc-l);color:var(--acc);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.vehicle-card .vc-body{flex:1}
+.vehicle-card .vc-name{font-size:15px;font-weight:600;color:var(--text)}
+.vehicle-card .vc-detail{font-size:12px;color:var(--text3);margin-top:2px}
+.vehicle-card .vc-actions{display:flex;gap:4px}
+.vehicle-card.active{border-color:var(--acc);background:var(--acc-l)}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════ */
+@media(max-height:700px){.phone{height:100vh;border-radius:0;box-shadow:none}.phone::before{display:none}}
+@media(max-width:420px){.phone{width:100vw;height:100vh;border-radius:0;box-shadow:none}.phone::before{display:none}}
+
+/* ═══════════════════════════════════════════
+   EMPTY STATE
+   ═══════════════════════════════════════════ */
+.empty{text-align:center;padding:36px 16px;color:var(--text3)}
+.empty svg{width:36px;height:36px;margin-bottom:10px;opacity:.4}
+.empty .e-title{font-size:16px;font-weight:600;color:var(--text2);margin-bottom:4px}
+.empty .e-desc{font-size:14px;color:var(--text3)}
+
+/* ═══════════════════════════════════════════
+   IMAGE PREVIEW
+   ═══════════════════════════════════════════ */
+.img-preview{border-radius:12px;overflow:hidden;margin-bottom:12px;border:1px solid var(--border);position:relative}
+.img-preview img{width:100%;max-height:200px;object-fit:contain;background:var(--surface2);display:block}
+.img-preview .remove-img{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:var(--err);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+<div class="phone" id="app">
+  <div class="statusbar"><span id="clock">9:41</span><span id="statusIcons"></span></div>
+  <div class="scroller" id="scroller">
+
+    <!-- ═══ LOGIN ═══ -->
+    <div class="screen on" id="s-login">
+      <div class="auth">
+        <div class="auth-title">SHYFTEX</div>
+        <div class="auth-sub">Tu lista. Los mejores precios.</div>
+        <div class="auth-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><input type="email" placeholder="Email" id="loginEmail" value="demo@shop.com"></div>
+        <div class="auth-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><input type="password" placeholder="Contraseña" id="loginPass" value="demo123"></div>
+        <button class="btn btn-p" onclick="doLogin()" style="margin-top:12px">Iniciar sesión</button>
+        <div class="auth-link">¿No tienes cuenta? <a onclick="go('s-register')">Regístrate</a></div>
+        <button class="btn btn-s" onclick="doLogin()" style="margin-top:12px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Entrar en modo demo
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ REGISTER ═══ -->
+    <div class="screen" id="s-register">
+      <div class="auth">
+        <button class="icon-btn" onclick="go('s-login')" style="align-self:flex-start;margin-bottom:20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="auth-title">Crear cuenta</div>
+        <div class="auth-sub">Empieza a ahorrar en tus compras</div>
+        <div class="auth-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input type="text" placeholder="Nombre" id="regName"></div>
+        <div class="auth-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><input type="email" placeholder="Email" id="regEmail"></div>
+        <div class="auth-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><input type="password" placeholder="Contraseña (min. 6 caracteres)" id="regPass"></div>
+        <button class="btn btn-p" onclick="doRegister()" style="margin-top:12px">Crear cuenta</button>
+        <div class="auth-link">Ya tienes cuenta? <a onclick="go('s-login')">Inicia sesión</a></div>
+      </div>
+    </div>
+
+    <!-- ═══ ONBOARDING (dynamic) ═══ -->
+    <div class="screen" id="s-onboard"></div>
+
+    <!-- ═══ HOME ═══ -->
+    <div class="screen" id="s-home"></div>
+
+    <!-- ═══ LISTS TAB ═══ -->
+    <div class="screen" id="s-lists"></div>
+
+    <!-- ═══ PLANS TAB ═══ -->
+    <div class="screen" id="s-plans"></div>
+
+    <!-- ═══ PROFILE ═══ -->
+    <div class="screen" id="s-profile"></div>
+
+    <!-- ═══ CREATE LIST ═══ -->
+    <div class="screen" id="s-create"></div>
+
+    <!-- ═══ REVIEW ═══ -->
+    <div class="screen" id="s-review"></div>
+
+    <!-- ═══ PLAN RESULTS ═══ -->
+    <div class="screen" id="s-plan"></div>
+
+    <!-- ═══ MISSION ═══ -->
+    <div class="screen" id="s-mission"></div>
+
+    <!-- ═══ SETTINGS SUB-SCREENS ═══ -->
+    <div class="screen" id="s-settings-vehicles"></div>
+    <div class="screen" id="s-settings-appearance"></div>
+    <div class="screen" id="s-settings-location"></div>
+
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   SHYFTEX — COMPLETE APPLICATION LOGIC
+   ═══════════════════════════════════════════════════ */
+
+// ─── ICONS (minimal stroke SVG) ───
+const I = {
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14h6"/><path d="M9 10h6"/><path d="M9 18h4"/></svg>',
+  map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+  image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+  car: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-6.01A1 1 0 0 0 12.38 4H5.62a1 1 0 0 0-.92.6L2 11l-2 1.15V16h3"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  nav: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+  monitor: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+  logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  store: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  dollar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  bolt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+};
+
+// ─── STATE ───
+const D = loadState();
+function defaultState(){return{
+  user:null, onboarded:false,
+  items:[], plan:null, mission:null,
+  lists:[], plans:[], totalSaved:0,
+  vehicles:[], defaultVehicle:null,
+  hasMembership:false,
+  location:{country:'Mexico',city:'Ciudad de Mexico'},
+  preferences:{theme:'system',accent:'blue'},
+  onboardingStep:0,
+}}
+function loadState(){try{const s=localStorage.getItem('shyftex');return s?JSON.parse(s):defaultState()}catch(e){return defaultState()}}
+function saveState(){try{localStorage.setItem('shyftex',JSON.stringify(D))}catch(e){showToast('Error al guardar datos')}}
+
+// ─── MOCK DATA ───
+const PRODUCTS=[
+  {id:'p1',name:'Leche Lala Entera 1L',canon:'leche entera',brand:'Lala',cat:'Lacteos'},
+  {id:'p2',name:'Leche Lala Deslactosada 1L',canon:'leche deslactosada',brand:'Lala',cat:'Lacteos'},
+  {id:'p3',name:'Yogurt Griego Lala 170g',canon:'yogurt griego',brand:'Lala',cat:'Lacteos'},
+  {id:'p4',name:'Huevos Kuik 18pzs',canon:'huevos',brand:'Kuik',cat:'Lacteos'},
+  {id:'p5',name:'Arroz Montalvo 1kg',canon:'arroz',brand:'Montalvo',cat:'Granos'},
+  {id:'p6',name:'Cereal Zucaritas 375g',canon:'cereal zucaritas',brand:"Kellogg's",cat:'Desayuno'},
+  {id:'p7',name:'Pechuga de Pollo Bachoco 1kg',canon:'pechuga de pollo',brand:'Bachoco',cat:'Carnes'},
+  {id:'p8',name:'Detergente Ariel 1L',canon:'detergente',brand:'Ariel',cat:'Limpieza'},
+  {id:'p9',name:'Fabuloso 1L',canon:'fabuloso',brand:'Fabuloso',cat:'Limpieza'},
+  {id:'p10',name:'Papel Regio 12 rollos',canon:'papel',brand:'Regio',cat:'Papel'},
+  {id:'p11',name:'Pan Blanco Bimbo',canon:'pan blanco',brand:'Bimbo',cat:'Panaderia'},
+  {id:'p12',name:'Coca-Cola 600ml',canon:'coca cola',brand:'Coca-Cola',cat:'Bebidas'},
+  {id:'p13',name:'Agua Ciel 1L',canon:'agua',brand:'Ciel',cat:'Bebidas'},
+  {id:'p14',name:'Sabritas Original 45g',canon:'papas fritas',brand:'Sabritas',cat:'Snacks'},
+  {id:'p15',name:'Shampoo Pantene 400ml',canon:'shampoo',brand:'Pantene',cat:'Cuidado personal'},
+];
+const BRANDS=['Lala','Bimbo','Coca-Cola','Ariel','Sabritas',"Kellogg's",'Pantene','Regio','Fabuloso','Montalvo','Bachoco','Kuik','Ciel'];
+const STORES=[
+  {id:'s1',name:'Walmart Polanco',retailer:'Walmart',addr:'Av. Horacio 1805, CDMX',lat:19.4363,lng:-99.1965},
+  {id:'s2',name:'Soriana La Condesa',retailer:'Soriana',addr:'Av. Tamaulipas 170, CDMX',lat:19.4194,lng:-99.1632},
+  {id:'s3',name:'Bodega Aurrera Roma',retailer:'Bodega Aurrera',addr:'Calle Orizaba 180, CDMX',lat:19.4161,lng:-99.1536},
+  {id:'s4',name:'Costco Santa Fe',retailer:'Costco',addr:'Periferico Sur 5495, CDMX',lat:19.3626,lng:-99.2613},
+  {id:'s5',name:'Chedraui Polanco',retailer:'Chedraui',addr:'Av. Patriotismo 601, CDMX',lat:19.4263,lng:-99.1914},
+];
+const BASE={p1:24.5,p2:26,p3:18,p4:42,p5:28,p6:35,p7:89,p8:42,p9:22,p10:38,p11:48,p12:12,p13:8.5,p14:16,p15:65};
+const PROMOS=[
+  {sid:'s1',name:'2x1 Lacteos Lala',type:'2x1',prods:['p1','p2'],disc:.5},
+  {sid:'s2',name:'10% Limpieza',type:'pct',prods:['p8','p9'],disc:.10,card:'Citibanamex'},
+  {sid:'s3',name:'3x2 Cereales',type:'3x2',prods:['p6'],disc:.33},
+  {sid:'s1',name:'5% Coca-Cola',type:'pct',prods:['p12'],disc:.05},
+  {sid:'s4',name:'15% en pollo (miembros)',type:'pct',prods:['p7'],disc:.15,memb:true},
+];
+const USER_LOC={lat:19.4326,lng:-99.1332};
+
+// ─── THEME ENGINE ───
+function applyTheme(){
+  const root=document.documentElement;
+  let t=D.preferences.theme;
+  if(t==='system')t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+  root.setAttribute('data-theme',t);
+  root.setAttribute('data-accent',D.preferences.accent);
+  // Status bar
+  const sb=document.querySelector('.statusbar');
+  if(sb){sb.style.color=t==='dark'?'#F1F5F9':'#0F172A'}
+  // Status icons
+  document.getElementById('statusIcons').innerHTML=`<span style="display:flex;gap:6px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg><svg width="16" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="10" x2="23" y2="14"/></svg></span>`;
+  // Auth logo removed - clean design
+}
+
+// ─── NAVIGATION ───
+let currentScreen='s-login';
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  const el=document.getElementById(id);if(el)el.classList.add('on');
+  currentScreen=id;
+  const sc=document.getElementById('scroller');if(sc)sc.scrollTop=0;
+  renderScreen(id);
+}
+function goTab(id,tabEl){
+  go(id);
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  if(tabEl)tabEl.classList.add('on');
+}
+
+// ─── RENDER HELPERS ───
+function $(id){return document.getElementById(id)}
+function icon(name,size=22){return `<div style="width:${size}px;height:${size}px;display:flex">${I[name]||''}</div>`}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmt(n){if(isNaN(n)||n==null)return'$0.00';return'$'+Number(n).toFixed(2)}
+function showToast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
+function distKm(a,b){const R=6371,dl=(b.lat-a.lat)*Math.PI/180,dg=(b.lng-a.lng)*Math.PI/180;const h=Math.sin(dl/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dg/2)**2;return R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h))}
+
+// ─── TAB BAR HTML ───
+function tabBar(active){
+  const tabs=[['s-home','home','Inicio'],['s-lists','list','Listas'],['s-plans','map','Planes'],['s-profile','user','Perfil']];
+  return `<div class="tabbar">${tabs.map(([id,ic,label])=>`<button class="tab${active===id?' on':''}" onclick="goTab('${id}',this)">${I[ic]}<span>${label}</span></button>`).join('')}</div>`;
+}
+
+// ─── AUTH ───
+function doLogin(){
+  const email=($('loginEmail').value||'').trim();
+  if(!email){showToast('Ingresa tu email');return}
+  D.user={name:email.split('@')[0],email};
+  saveState();
+  if(!D.onboarded){go('s-onboard')}
+  else{go('s-home')}
+}
+function doRegister(){
+  const name=$('regName').value.trim();
+  const email=$('regEmail').value.trim();
+  if(!name){showToast('Ingresa tu nombre');return}
+  if(!email||!email.includes('@')){showToast('Ingresa un email válido');return}
+  D.user={name,email};
+  D.onboarded=false;
+  saveState();
+  go('s-onboard');
+}
+function doLogout(){D.user=null;D.onboarded=false;saveState();go('s-login');showToast('Sesión cerrada')}
+
+// ─── ONBOARDING ───
+function renderOnboard(){
+  const step=D.onboardingStep||0;
+  const el=$('s-onboard');
+  const steps=['Bienvenido','Tu ubicacion','Tu transporte','Tus preferencias','Apariencia'];
+  let html=`<div class="onboard">
+    <div class="step-indicator">${steps.map((_,i)=>`<div class="step-dot${i===step?' on':''}"></div>`).join('')}</div>`;
+
+  if(step===0){
+    html+=`<div class="step-title">Hola${D.user?', '+esc(D.user.name):''}!</div>
+      <div class="step-desc">Vamos a configurar SHYFTEX para que se adapte a ti. Esto solo toma un momento.</div>
+      <div class="step-body">
+        <div class="field"><label>Nombre</label><input class="input" id="ob-name" value="${D.user?.name||''}" placeholder="Tu nombre"></div>
+        <div class="field"><label>Ciudad</label><input class="input" id="ob-city" value="${D.location?.city||''}" placeholder="Ej: Ciudad de Mexico"></div>
+        <div class="field"><label>Pais</label><input class="input" id="ob-country" value="${D.location?.country||'Mexico'}" placeholder="Mexico"></div>
+      </div>`;
+  } else if(step===1){
+    html+=`<div class="step-title">Ubicacion</div>
+      <div class="step-desc">Para calcular distancias y encontrar tiendas cercanas.</div>
+      <div class="step-body">
+        <div class="field"><label>Ciudad</label><input class="input" id="ob-city" value="${D.location?.city||''}" placeholder="Ciudad de Mexico"></div>
+        <div class="field"><label>Pais</label><input class="input" id="ob-country" value="${D.location?.country||'Mexico'}"></div>
+        <div class="tip">${I.pin}<div class="tip-text">Tu ubicación se usa para calcular costos de transporte y tiendas cercanas. Puedes modificarla después desde Configuración.</div></div>
+      </div>`;
+  } else if(step===2){
+    html+=`<div class="step-title">Transporte</div>
+      <div class="step-desc">Registra tu vehiculo para costos de transporte precisos. Puedes saltarte este paso.</div>
+      <div class="step-body">
+        <div class="field"><label>Marca</label><input class="input" id="ob-vmake" placeholder="Ej: Nissan, Toyota"></div>
+        <div class="field"><label>Modelo</label><input class="input" id="ob-vmodel" placeholder="Ej: Versa, Corolla"></div>
+        <div class="field"><label>Consumo (km/L) <em>*</em></label><input class="input" id="ob-veff" type="number" placeholder="Ej: 13"><div class="input-hint">Si lo conoces, tiene prioridad sobre el consumo oficial.</div></div>
+      </div>`;
+  } else if(step===3){
+    html+=`<div class="step-title">Preferencias</div>
+      <div class="step-desc">Personaliza tu experiencia.</div>
+      <div class="step-body">
+        <div class="sg"><div class="sg-label">Membresias</div>
+          <div class="si" onclick="D.hasMembership=!D.hasMembership;renderOnboard()">
+            <div class="s-ic">${I.tag}</div><div class="s-body"><div class="s-title">Membresias de tienda</div><div class="s-desc">Costco, Citibanamex, etc.</div></div>
+            <div class="s-val">${D.hasMembership?'Activada':'No'}</div>
+          </div>
+        </div>
+        <div class="tip">${I.info}<div class="tip-text">Las membresias desbloquean descuentos especiales en optimizaciones.</div></div>
+      </div>`;
+  } else if(step===4){
+    html+=`<div class="step-title">Apariencia</div>
+      <div class="step-desc">Elige como quieres que se vea la app.</div>
+      <div class="step-body">
+        <div class="sg"><div class="sg-label">Tema</div>
+          <div class="opt-grid">
+            <div class="opt-card${D.preferences.theme==='light'?' sel':''}" onclick="D.preferences.theme='light';saveState();applyTheme();renderOnboard()"><div class="oc-icon">${I.sun}</div><div class="oc-label">Claro</div></div>
+            <div class="opt-card${D.preferences.theme==='dark'?' sel':''}" onclick="D.preferences.theme='dark';saveState();applyTheme();renderOnboard()"><div class="oc-icon">${I.moon}</div><div class="oc-label">Oscuro</div></div>
+            <div class="opt-card${D.preferences.theme==='system'?' sel':''}" onclick="D.preferences.theme='system';saveState();applyTheme();renderOnboard()"><div class="oc-icon">${I.monitor}</div><div class="oc-label">Sistema</div></div>
+          </div>
+        </div>
+        <div class="sg"><div class="sg-label">Color de acentuación</div>
+          <div class="color-grid">
+            ${['green','blue','red','pink','purple','orange','yellow','gold'].map(c=>{
+              const colors={green:'#16A34A',blue:'#2563EB',red:'#DC2626',pink:'#DB2777',purple:'#9333EA',orange:'#EA580C',yellow:'#CA8A04',gold:'#B45309'};
+              return `<div class="color-opt${D.preferences.accent===c?' sel':''}" style="background:${colors[c]}" onclick="D.preferences.accent='${c}';saveState();applyTheme();renderOnboard()"><span class="co-check">${I.check}</span></div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  const isLast=step===steps.length-1;
+  html+=`<div class="step-footer">
+    <button class="btn btn-p" onclick="nextOnboardStep()">${isLast?'Empezar':'Siguiente'}</button>
+    ${step>0?`<button class="btn btn-ghost" onclick="D.onboardingStep=Math.max(0,D.onboardingStep-1);saveState();renderOnboard()">Atras</button>`:''}
+    ${step===2?`<button class="btn btn-ghost" onclick="nextOnboardStep()">Omitir</button>`:''}
+  </div></div>`;
+  el.innerHTML=html;
+}
+function nextOnboardStep(){
+  const step=D.onboardingStep||0;
+  // Save data from current step
+  if(step===0){
+    const name=$('ob-name')?.value;if(name)D.user.name=name;
+    const city=$('ob-city')?.value;if(city)D.location.city=city;
+    const country=$('ob-country')?.value;if(country)D.location.country=country;
+  } else if(step===1){
+    const city=$('ob-city')?.value;if(city)D.location.city=city;
+    const country=$('ob-country')?.value;if(country)D.location.country=country;
+  } else if(step===2){
+    const mk=$('ob-vmake')?.value,md=$('ob-vmodel')?.value,ef=parseFloat($('ob-veff')?.value);
+    if(mk||md||ef){
+      const v={id:'v_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),make:mk||'Mi carro',model:md||'',efficiency:ef||13,name:(mk||'Carro')+' '+(md||'')};
+      D.vehicles.push(v);if(!D.defaultVehicle)D.defaultVehicle=v.id;
+    }
+  }
+  saveState();
+  if(step<4){D.onboardingStep=step+1;saveState();renderOnboard()}
+  else{D.onboarded=true;saveState();go('s-home')}
+}
+
+// ─── HOME ───
+function renderHome(){
+  const el=$('s-home');
+  let html=`<div class="content">
+    <div style="margin-bottom:16px">
+      <div style="font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.02em">Hola${D.user?', '+esc(D.user.name):''}</div>
+      <div style="font-size:13px;color:var(--text3);margin-top:2px">¿Qué necesitas comprar hoy?</div>
+    </div>
+    <button class="hero" onclick="go('s-create')">
+      <div class="h-body"><div class="h-title">Nueva compra</div><div class="h-sub">Escribe tu lista y encontramos los mejores precios</div></div>
+      <div class="h-arrow">${I.chev}</div>
+    </button>`;
+
+  if(D.lists.length>0||D.plans.length>0){
+    html+=`<div class="stats">
+      <div class="stat"><div class="sv">${fmt(D.totalSaved)}</div><div class="sl">Ahorro total</div></div>
+      <div class="stat"><div class="sv">${D.lists.length}</div><div class="sl">Listas</div></div>
+      <div class="stat"><div class="sv">${D.plans.length}</div><div class="sl">Planes</div></div>
+    </div>`;
+  }
+
+  html+=`<div class="sec-title">Como funciona</div>
+    <div class="fgrid">
+      <div class="fcard"><div class="fc-icon" style="background:var(--info-l);color:var(--info)">${I.list}</div><div class="fc-title">Sube tu lista</div><div class="fc-desc">Escribe, pega o sube una foto</div></div>
+      <div class="fcard"><div class="fc-icon" style="background:var(--ok-l);color:var(--ok)">${I.search}</div><div class="fc-title">Comparamos</div><div class="fc-desc">Precios, promos y distancias</div></div>
+      <div class="fcard"><div class="fc-icon" style="background:var(--warn-l);color:var(--warn)">${I.map}</div><div class="fc-title">Optimizamos</div><div class="fc-desc">La mejor ruta y estrategia</div></div>
+      <div class="fcard"><div class="fc-icon" style="background:var(--ok-l);color:var(--ok)">${I.check}</div><div class="fc-title">Compra</div><div class="fc-desc">Te guiamos paso a paso</div></div>
+    </div>
+    <div class="tip"><div class="tip-text"><strong>Tip:</strong> Sé específico con las marcas. "2 litros de leche Lala" produce mejores resultados que solo "leche".</div></div>
+  </div>${tabBar('s-home')}`;
+  el.innerHTML=html;
+}
+
+// ─── LISTS TAB ───
+function renderLists(){
+  const el=$('s-lists');
+  let html=`<div class="content"><button class="btn btn-p" onclick="go('s-create')" style="margin-bottom:16px">Nueva lista de compras</button><div id="listsBox">`;
+  if(D.lists.length===0){
+    html+=`<div class="empty">${I.list}<div class="e-title">No tienes listas</div><div class="e-desc">Crea tu primera lista para empezar a ahorrar.</div></div>`;
+  } else {
+    html+=D.lists.map(l=>`<div class="item"><div class="ic" style="background:var(--ok-l);color:var(--ok)">${I.list}</div><div class="info"><div class="name">${esc(l.title)}</div><div class="meta">${l.items} productos - ${new Date(l.date).toLocaleDateString('es-MX')}</div></div><div class="right"><div class="price">-${fmt(l.saved)}</div></div></div>`).join('');
+  }
+  html+=`</div></div>${tabBar('s-lists')}`;
+  el.innerHTML=html;
+}
+
+// ─── PLANS TAB ───
+function renderPlans(){
+  const el=$('s-plans');
+  let html=`<div class="content">`;
+  if(D.plans.length===0){
+    html+=`<div class="empty">${I.map}<div class="e-title">No hay planes</div><div class="e-desc">Crea una lista para generar planes.</div></div>`;
+  } else {
+    html+=D.plans.map((p,i)=>{
+      const modeName=p.mode==='BALANCED'?'Equilibrado':p.mode==='MAX_SAVINGS'?'Max. Ahorro':'Max. Comodidad';
+      return `<div class="item" onclick="D.plan=D.plans[${i}];D._planSource='plans';renderPlan();go('s-plan')"><div class="ic" style="background:var(--acc-l);color:var(--acc)">${I.map}</div><div class="info"><div class="name">${modeName}</div><div class="meta">${p.stores.length} tienda(s) - ${p.totalTime} min</div></div><div class="right"><div class="price">${fmt(p.effective)}</div>${p.savings>0?`<div style="font-size:11px;color:var(--ok)">-${fmt(p.savings)}</div>`:''}</div></div>`;
+    }).join('');
+  }
+  html+=`</div>${tabBar('s-plans')}`;
+  el.innerHTML=html;
+}
+
+// ─── PROFILE ───
+function renderProfile(){
+  const el=$('s-profile');
+  const dv=D.vehicles.find(v=>v.id===D.defaultVehicle);
+  const vehText=dv?`${dv.make} ${dv.model} (${dv.efficiency} km/L)`:`${D.vehicles.length} vehiculo(s) registrado(s)`;
+  const themeLabels={light:'Claro',dark:'Oscuro',system:'Sistema'};
+  const accentLabels={green:'Verde',blue:'Azul',red:'Rojo',pink:'Rosa',purple:'Morado',orange:'Naranja',yellow:'Amarillo',gold:'Dorado'};
+  let html=`<div style="padding:0">
+    <div class="profile-hdr">
+      <div class="avatar">${esc(D.user?.name?.charAt(0)?.toUpperCase()||'U')}</div>
+      <div class="profile-name">${esc(D.user?.name||'Usuario')}</div>
+      <div class="profile-email">${esc(D.user?.email||'')}</div>
+    </div>
+    <div style="padding:16px">
+      <div class="sg"><div class="sg-label">Ubicacion</div>
+        <div class="si" onclick="go('s-settings-location')"><div class="s-ic">${I.pin}</div><div class="s-body"><div class="s-title">Ubicacion habitual</div><div class="s-desc">${D.location?.city||'No configurada'}, ${D.location?.country||''}</div></div><div class="s-arr">${I.chev}</div></div>
+      </div>
+      <div class="sg"><div class="sg-label">Transporte</div>
+        <div class="si" onclick="go('s-settings-vehicles')"><div class="s-ic">${I.car}</div><div class="s-body"><div class="s-title">Mis vehiculos</div><div class="s-desc">${vehText}</div></div><div class="s-arr">${I.chev}</div></div>
+      </div>
+      <div class="sg"><div class="sg-label">Apariencia</div>
+        <div class="si" onclick="go('s-settings-appearance')"><div class="s-ic">${I.sun}</div><div class="s-body"><div class="s-title">Tema y colores</div><div class="s-desc">${themeLabels[D.preferences.theme]||'Sistema'} - ${accentLabels[D.preferences.accent]||'Verde'}</div></div><div class="s-arr">${I.chev}</div></div>
+      </div>
+      <div class="sg"><div class="sg-label">Preferencias</div>
+        <div class="si" onclick="D.hasMembership=!D.hasMembership;saveState();renderProfile()"><div class="s-ic">${I.tag}</div><div class="s-body"><div class="s-title">Membresias</div><div class="s-desc">${D.hasMembership?'Activadas':'No activadas'}</div></div><div class="s-val">${D.hasMembership?'ON':'OFF'}</div></div>
+      </div>
+      <button class="btn btn-s" onclick="doLogout()" style="margin-top:16px;color:var(--err);border-color:var(--err)">Cerrar sesión</button>
+    </div>
+  </div>${tabBar('s-profile')}`;
+  el.innerHTML=html;
+}
+
+// ─── SETTINGS: LOCATION ───
+function renderLocation(){
+  $('s-settings-location').innerHTML=`
+    <div class="navbar"><button class="icon-btn" onclick="renderProfile();go('s-profile')">${I.back}</button><h2>Ubicacion</h2></div>
+    <div class="content">
+      <p style="color:var(--text2);margin-bottom:20px;line-height:1.5">Tu ubicacion se usa para calcular costos de transporte y encontrar tiendas cercanas.</p>
+      <div class="field"><label>Pais</label><input class="input" id="set-country" value="${D.location?.country||'Mexico'}"></div>
+      <div class="field"><label>Ciudad</label><input class="input" id="set-city" value="${D.location?.city||''}"></div>
+      <button class="btn btn-p" onclick="D.location.country=$('set-country').value;D.location.city=$('set-city').value;saveState();showToast('Ubicacion guardada');renderProfile();go('s-profile')">Guardar</button>
+    </div>`;
+}
+
+// ─── SETTINGS: VEHICLES ───
+function renderVehicles(){
+  let html=`<div class="navbar"><button class="icon-btn" onclick="renderProfile();go('s-profile')">${I.back}</button><h2>Vehiculos</h2><button class="icon-btn" onclick="renderVehicleEdit(null)">${I.plus}</button></div><div class="content">`;
+  if(D.vehicles.length===0){
+    html+=`<div class="empty">${I.car}<div class="e-title">Sin vehiculos</div><div class="e-desc">Agrega un vehiculo para calcular costos de transporte.</div></div>`;
+  } else {
+    html+=D.vehicles.map(v=>`<div class="vehicle-card${v.id===D.defaultVehicle?' active':''}">
+      <div class="vc-icon">${I.car}</div>
+      <div class="vc-body"><div class="vc-name">${v.make} ${v.model}${v.id===D.defaultVehicle?' <span class="badge badge-ok" style="margin-left:6px">Principal</span>':''}</div><div class="vc-detail">${v.efficiency} km/L</div></div>
+      <div class="vc-actions">
+        ${v.id!==D.defaultVehicle?`<button class="btn btn-sm btn-s" onclick="D.defaultVehicle='${v.id}';saveState();renderVehicles();showToast('Vehiculo principal actualizado')">Principal</button>`:''}
+        <button class="icon-btn" onclick="renderVehicleEdit('${v.id}')" style="color:var(--acc)">${I.edit}</button>
+        <button class="icon-btn" onclick="D.vehicles=D.vehicles.filter(v=>v.id!=='${v.id}');if(D.defaultVehicle==='${v.id}')D.defaultVehicle=D.vehicles[0]?.id||null;saveState();renderVehicles();showToast('Vehiculo eliminado')" style="color:var(--err)">${I.trash}</button>
+      </div>
+    </div>`).join('');
+  }
+  html+=`</div>`;
+  $('s-settings-vehicles').innerHTML=html;
+}
+function renderVehicleEdit(id){
+  const v=id?D.vehicles.find(x=>x.id===id):null;
+  $('s-settings-vehicles').innerHTML=`
+    <div class="navbar"><button class="icon-btn" onclick="renderVehicles()">${I.back}</button><h2>${v?'Editar':'Agregar'} vehiculo</h2></div>
+    <div class="content">
+      <div class="field"><label>Marca</label><input class="input" id="ve-make" value="${v?.make||''}" placeholder="Ej: Nissan, Toyota"></div>
+      <div class="field"><label>Modelo</label><input class="input" id="ve-model" value="${v?.model||''}" placeholder="Ej: Versa, Corolla"></div>
+      <div class="field"><label>Consumo (km/L)</label><input class="input" id="ve-eff" type="number" value="${v?.efficiency||''}" placeholder="Ej: 13"><div class="input-hint">Si lo conoces, tiene prioridad sobre el consumo oficial.</div></div>
+      <button class="btn btn-p" onclick="saveVehicleEdit('${id||''}')">Guardar</button>
+      ${id?`<button class="btn btn-ghost" style="color:var(--err);margin-top:8px" onclick="D.vehicles=D.vehicles.filter(v=>v.id!=='${id}');if(D.defaultVehicle==='${id}')D.defaultVehicle=D.vehicles[0]?.id||null;saveState();renderVehicles();showToast('Eliminado')">Eliminar vehiculo</button>`:''}
+    </div>`;
+}
+function saveVehicleEdit(id){
+  const make=$('ve-make').value||'Mi carro';
+  const model=$('ve-model').value||'';
+  const eff=parseFloat($('ve-eff').value)||13;
+  if(id){
+    const v=D.vehicles.find(x=>x.id===id);
+    if(v){v.make=make;v.model=model;v.efficiency=eff;v.name=make+' '+model}
+  } else {
+    const v={id:'v_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),make,model,efficiency:eff,name:make+' '+model};
+    D.vehicles.push(v);if(!D.defaultVehicle)D.defaultVehicle=v.id;
+  }
+  saveState();showToast('Vehiculo guardado');renderVehicles();
+}
+
+// ─── SETTINGS: APPEARANCE ───
+function renderAppearance(){
+  $('s-settings-appearance').innerHTML=`
+    <div class="navbar"><button class="icon-btn" onclick="renderProfile();go('s-profile')">${I.back}</button><h2>Apariencia</h2></div>
+    <div class="content">
+      <div class="sg"><div class="sg-label">Tema</div>
+        <div class="opt-grid">
+          <div class="opt-card${D.preferences.theme==='light'?' sel':''}" onclick="D.preferences.theme='light';saveState();applyTheme();renderAppearance()"><div class="oc-icon">${I.sun}</div><div class="oc-label">Claro</div></div>
+          <div class="opt-card${D.preferences.theme==='dark'?' sel':''}" onclick="D.preferences.theme='dark';saveState();applyTheme();renderAppearance()"><div class="oc-icon">${I.moon}</div><div class="oc-label">Oscuro</div></div>
+          <div class="opt-card${D.preferences.theme==='system'?' sel':''}" onclick="D.preferences.theme='system';saveState();applyTheme();renderAppearance()"><div class="oc-icon">${I.monitor}</div><div class="oc-label">Sistema</div></div>
+        </div>
+      </div>
+      <div class="sg"><div class="sg-label">Color de acentuacion</div>
+        <div class="color-grid">
+          ${['green','blue','red','pink','purple','orange','yellow','gold'].map(c=>{
+            const colors={green:'#16A34A',blue:'#2563EB',red:'#DC2626',pink:'#DB2777',purple:'#9333EA',orange:'#EA580C',yellow:'#CA8A04',gold:'#B45309'};
+            return `<div class="color-opt${D.preferences.accent===c?' sel':''}" style="background:${colors[c]}" onclick="D.preferences.accent='${c}';saveState();applyTheme();renderAppearance()"><span class="co-check">${I.check}</span></div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─── CREATE LIST ───
+let uploadedImage=null;
+function renderCreate(){
+  $('s-create').innerHTML=`
+    <div class="navbar"><button class="icon-btn" onclick="go('s-home')">${I.back}</button><h2>Nueva lista</h2><div style="width:36px"></div></div>
+    <div class="content">
+      <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+        ${I.camera}
+        <div class="uz-title">Subir imagen de tu lista</div>
+        <div class="uz-sub">Foto, captura de pantalla o imagen PNG/JPG</div>
+      </div>
+      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg" style="display:none" onchange="handleImageUpload(event)">
+      <div id="imagePreviewBox"></div>
+      <div class="upload-divider">o escribe tu lista</div>
+      <div class="field"><label>Productos</label>
+        <textarea class="input" id="listInput" placeholder="Ej: 2 litros de leche Lala, huevos, arroz, cereal Zucaritas, pechuga de pollo, Ariel y papel Regio" oninput="updateCharCount()"></textarea>
+        <div style="display:flex;justify-content:space-between;margin-top:6px">
+          <span class="input-hint" id="charCount">0 caracteres</span>
+          <a style="font-size:13px;color:var(--err);cursor:pointer" onclick="$('listInput').value='';updateCharCount()">Limpiar</a>
+        </div>
+      </div>
+      <div class="card" style="background:var(--info-l);border-color:var(--info)">
+        <div style="font-size:14px;font-weight:600;color:var(--info);margin-bottom:6px">Ejemplo:</div>
+        <p style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:8px">2 litros de leche Lala, 18 huevos Kuik, arroz Montalvo 1kg, cereal Zucaritas 375g, pechuga de pollo 1kg, detergente Ariel 1L y papel Regio 12 rollos</p>
+        <a style="font-size:13px;color:var(--info);font-weight:600;cursor:pointer" onclick="useExample()">Usar este ejemplo</a>
+      </div>
+    </div>
+    <div class="bottom"><button class="btn btn-p" id="parseBtn" onclick="parseList()" disabled>Analizar mi lista</button></div>`;
+}
+function updateCharCount(){const v=$('listInput')?.value||'';$('charCount').textContent=v.length+' caracteres';const b=$('parseBtn');if(b)b.disabled=!v.trim()}
+function useExample(){
+  const ex='2 litros de leche Lala, 18 huevos Kuik, arroz Montalvo 1kg, cereal Zucaritas 375g, pechuga de pollo 1kg, detergente Ariel 1L y papel Regio 12 rollos';
+  $('listInput').value=ex;updateCharCount();
+}
+
+// ─── IMAGE UPLOAD + OCR ───
+function handleImageUpload(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    uploadedImage=ev.target.result;
+    $('imagePreviewBox').innerHTML=`<div class="img-preview"><img src="${uploadedImage}" alt="Lista"><button class="remove-img" onclick="removeImage()">X</button></div>`;
+    // Try OCR
+    processOCR(uploadedImage);
+  };
+  reader.readAsDataURL(file);
+}
+function removeImage(){uploadedImage=null;$('imagePreviewBox').innerHTML='';$('fileInput').value='';updateCharCount()}
+
+async function processOCR(imgSrc){
+  const btn=$('parseBtn');
+  if(btn){btn.disabled=true;btn.innerHTML='<div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Procesando imagen...';}
+  try{
+    if(typeof Tesseract!=='undefined'){
+      const worker=await Tesseract.createWorker('spa');
+      const{data:{text}}=await worker.recognize(imgSrc);
+      await worker.terminate();
+      if(text&&text.trim()){
+        $('listInput').value=text.trim().replace(/\n/g,', ');
+        updateCharCount();
+        showToast('Texto detectado! Revisa tu lista.');
+      } else {
+        showToast('No se detectó texto. Intenta con otra imagen.');
+      }
+    } else {
+      showToast('OCR no disponible. Escribe tu lista manualmente.');
+    }
+  }catch(err){
+    showToast('Error al procesar imagen. Intenta manualmente.');
+  }
+  const btn2=$('parseBtn');
+  if(btn2)btn2.innerHTML='Analizar mi lista';
+}
+
+// ─── PARSING ───
+function parseList(){
+  const raw=$('listInput').value;
+  const lines=raw.split(/[,;]+/).map(l=>l.trim()).filter(l=>l);
+  D.items=lines.map(line=>parseItem(line));
+  saveState();renderReview();go('s-review');
+}
+function parseItem(text){
+  let qty=1,unit='pieza',brand=null;
+  for(const b of BRANDS){if(text.toLowerCase().includes(b.toLowerCase())){brand=b;break}}
+  const m=text.match(/(\d+(?:\.\d+)?)\s*(litros?|lt|l|ml|kilos?|kg|gramos?|g|onzas?|oz|piezas?|pzs?|pzas?|rollos?|paquetes?)/i);
+  if(m){qty=parseFloat(m[1]);const u=m[2].toLowerCase();if(u.startsWith('lit')||u==='lt'||u==='l')unit='litro';else if(u==='ml')unit='ml';else if(u.startsWith('kilo')||u==='kg')unit='kilogramo';else if(u.startsWith('gram')||u==='g')unit='gramo';else if(u.startsWith('p'))unit='pieza';else if(u.startsWith('roll'))unit='rollo'}
+  let bestP=null,bestS=0;
+  for(const p of PRODUCTS){let s=0;const w=p.canon.split(' ');for(const x of w){if(text.toLowerCase().includes(x))s+=2}if(brand&&p.brand===brand)s+=5;if(text.toLowerCase().includes(p.canon))s+=10;if(s>bestS){bestS=s;bestP=p}}
+  const ml=bestS>=10?'EXACT':bestS>=5?'VARIANTE':bestS>=2?'SUSTITUTO':'NO_ENCONTRADO';
+  return{id:'i_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),raw:text,name:bestP?.name||text.replace(/^\d+(?:\.\d+)?\s*\w+\s+de?\s*/i,'').trim(),brand:brand||bestP?.brand||null,qty,unit,product:bestP,matchLevel:ml,priority:'REQUIRED',allowsSub:true,found:false,notFound:false,price:null};
+}
+
+// ─── REVIEW ───
+function renderReview(){
+  const el=$('s-review');
+  const icons={EXACT:'check',VARIANTE:'edit',SUSTITUTO:'info',NO_ENCONTRADO:'x'};
+  const badgeCls={EXACT:'badge-ok',VARIANTE:'badge-info',SUSTITUTO:'badge-warn',NO_ENCONTRADO:'badge-err'};
+  const badgeLabel={EXACT:'Exacto',VARIANTE:'Variante',SUSTITUTO:'Sustituto',NO_ENCONTRADO:'No encontrado'};
+  const priLabel={REQUIRED:'Requerido',PREFERRED:'Preferido',OPTIONAL:'Opcional'};
+
+  let html=`<div class="navbar"><button class="icon-btn" onclick="go('s-create')">${I.back}</button><h2>Revisar productos</h2></div>
+    <div style="background:var(--ok-l);padding:8px 16px;font-size:13px;color:var(--ok);font-weight:600;border-bottom:1px solid var(--border)">${D.items.length} productos encontrados</div>
+    <div class="content">`;
+
+  D.items.forEach(item=>{
+    html+=`<div class="item" onclick="togglePriority('${item.id}')">
+      <div class="ic" style="background:var(--acc-l);color:var(--acc)">${I[icons[item.matchLevel]]||I.info}</div>
+      <div class="info"><div class="name">${esc(item.name)}</div><div class="meta">${item.qty} ${item.unit}${item.brand?' - '+esc(item.brand):''} <span class="badge badge-muted" style="margin-left:4px">${priLabel[item.priority]}</span></div></div>
+      <div class="right"><span class="badge ${badgeCls[item.matchLevel]}">${badgeLabel[item.matchLevel]}</span></div>
+    </div>`;
+  });
+
+  html+=`</div><div class="bottom"><button class="btn btn-p" onclick="runOptimization()">${I.bolt} Optimizar compra</button></div>`;
+  el.innerHTML=html;
+}
+function togglePriority(id){const item=D.items.find(i=>i.id===id);if(!item)return;const p=['REQUIRED','PREFERRED','OPTIONAL'];item.priority=p[(p.indexOf(item.priority)+1)%3];saveState();renderReview()}
+
+// ─── OPTIMIZATION ENGINE ───
+function runOptimization(){
+  const matched=D.items.filter(i=>i.product);
+  if(matched.length===0){showToast('No se encontraron productos coincidentes.');return}
+
+  // Score each store
+  const scores=STORES.map(store=>{
+    const dist=distKm(USER_LOC,{lat:store.lat,lng:store.lng});
+    let cost=0;const items=[];
+    for(const item of matched){
+      const seed=(store.id+item.product.id).split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+      const base=BASE[item.product.id]||40;
+      const var_=((seed%20)-10)/100;
+      let price=base*(1+var_);
+      const promo=PROMOS.find(p=>p.sid===store.id&&p.prods.includes(item.product.id));
+      if(promo){if(promo.card&&!D.hasMembership){}else if(promo.memb&&!D.hasMembership){}else{if(promo.type==='2x1'&&item.qty>=2)price*=(Math.floor(item.qty/2)+item.qty%2)/item.qty;else if(promo.type==='3x2'&&item.qty>=3)price*=(Math.floor(item.qty/3)*2+item.qty%3)/item.qty;else if(promo.type==='pct')price*=(1-promo.disc)}}
+      const lc=price*item.qty;cost+=lc;items.push({...item,price,lineCost:lc,promo:promo?promo.name:null});
+    }
+    const fuelEff=D.vehicles.find(v=>v.id===D.defaultVehicle)?.efficiency||13;
+    const tc=(dist*2/fuelEff)*24.5;
+    return{store,dist,productCost:cost,transportCost:tc,effective:cost+tc,items,avail:items.length,total:matched.length};
+  }).filter(s=>s.avail>0);
+
+  scores.sort((a,b)=>a.effective-b.effective);
+  const plans=[];
+  if(scores.length>=1)plans.push(buildPlan('BALANCED',[scores[0]],matched));
+  if(scores.length>=2){const sp=buildSplitPlan(matched);if(sp)plans.push(sp)}
+  if(scores.length>=1)plans.push(buildPlan('CONVENIENCE',[scores[0]],matched));
+
+  const seen=new Set();const unique=[];
+  for(const p of plans){const k=p.stores.map(s=>s.store.id).sort().join(',');if(!seen.has(k)){seen.add(k);unique.push(p)}}
+
+  D.plans=unique;D.plan=unique[0];D._planSource='review';saveState();renderPlan();go('s-plan');updateHomeStats();
+}
+
+function buildPlan(mode,scores,allItems){
+  const stops=scores.map((s,i)=>({order:i+1,store:s.store,productCost:s.productCost,transportCost:s.transportCost,items:s.items,distance:s.dist,promos:[...new Set(s.items.filter(x=>x.promo).map(x=>x.promo))]}));
+  const tp=stops.reduce((a,s)=>a+s.productCost,0);const tt=stops.reduce((a,s)=>a+s.transportCost,0);const td=stops.reduce((a,s)=>a+s.distance*2,0);const tm=Math.round(td/30*60+stops.length*10);
+  let bl=0;for(const item of allItems){let m=0;STORES.forEach(st=>{const sd=(st.id+item.product.id).split('').reduce((a,c)=>a+c.charCodeAt(0),0);m=Math.max(m,(BASE[item.product.id]||40)*(1+((sd%20)-10)/100))});bl+=m*item.qty}
+  return{mode,stores:stops,totalProduct:tp,totalTransport:tt,totalDist:td,totalTime:tm,effective:tp+tt,baseline:bl,savings:Math.max(0,bl-tp),confidence:td<15?'HIGH':'MEDIUM'};
+}
+function buildSplitPlan(allItems){
+  const is=allItems.map(item=>{let best=null,bp=Infinity;for(const store of STORES){const sd=(store.id+item.product.id).split('').reduce((a,c)=>a+c.charCodeAt(0),0);const base=BASE[item.product.id]||40;let price=base*(1+((sd%20)-10)/100);const pr=PROMOS.find(p=>p.sid===store.id&&p.prods.includes(item.product.id));if(pr&&(pr.card?D.hasMembership:true)&&(pr.memb?D.hasMembership:true)){if(pr.type==='2x1'&&item.qty>=2)price*=(Math.floor(item.qty/2)+item.qty%2)/item.qty;else if(pr.type==='3x2'&&item.qty>=3)price*=(Math.floor(item.qty/3)*2+item.qty%3)/item.qty;else if(pr.type==='pct')price*=(1-pr.disc)}if(price*item.qty<bp){bp=price*item.qty;best={store,price,lineCost:price*item.qty,promo:pr?pr.name:null}}}return{...item,...best}});
+  const byS={};for(const x of is){if(!byS[x.store.id])byS[x.store.id]={store:x.store,items:[],productCost:0};byS[x.store.id].items.push(x);byS[x.store.id].productCost+=x.lineCost}
+  const sts=Object.values(byS);if(sts.length<=1)return null;
+  const tp=sts.reduce((a,s)=>a+s.productCost,0);const td=sts.reduce((a,s)=>a+distKm(USER_LOC,{lat:s.store.lat,lng:s.store.lng})*2,0);const fuelEff=D.vehicles.find(v=>v.id===D.defaultVehicle)?.efficiency||13;const tt=(td/fuelEff)*24.5;const tm=Math.round(td/30*60+sts.length*10);
+  let bl=0;allItems.forEach(item=>{let m=0;STORES.forEach(st=>{const sd=(st.id+item.product.id).split('').reduce((a,c)=>a+c.charCodeAt(0),0);m=Math.max(m,(BASE[item.product.id]||40)*(1+((sd%20)-10)/100))});bl+=m*item.qty});
+  return{mode:'MAX_SAVINGS',stores:sts.map((s,i)=>({...s,order:i+1,transportCost:0,distance:distKm(USER_LOC,{lat:s.store.lat,lng:s.store.lng}),promos:[...new Set(s.items.filter(x=>x.promo).map(x=>x.promo))]})),totalProduct:tp,totalTransport:tt,totalDist:td,totalTime:tm,effective:tp+tt,baseline:bl,savings:Math.max(0,bl-tp),confidence:td<15?'HIGH':'MEDIUM'};
+}
+
+// ─── RENDER PLAN ───
+function renderPlan(){
+  const p=D.plan;if(!p)return;
+  const modeN={BALANCED:'Equilibrado',MAX_SAVINGS:'Máximo Ahorro',CONVENIENCE:'Máxima Comodidad'};
+  let html='';
+  if(p.savings>0)html+=`<div class="savings"><div class="s-label">Ahorro estimado</div><div class="s-amount">${fmt(p.savings)}</div></div>`;
+  html+=`<div class="card">
+    <div class="sr"><span class="sl">Productos</span><span class="sv">${fmt(p.totalProduct)}</span></div>
+    <div class="sr"><span class="sl">Transporte</span><span class="sv">${fmt(p.totalTransport)}</span></div>
+    <div class="sr sr-total"><span class="sl">Total estimado</span><span class="sv">${fmt(p.effective)}</span></div>
+  </div>`;
+  html+=`<div class="conf ${p.confidence==='HIGH'?'high':'med'}">${I.shield} Confianza ${p.confidence==='HIGH'?'Alta':'Media'}</div>`;
+  html+=`<div class="card"><div class="sec-title" style="margin-bottom:8px">Ruta</div>
+    <div class="metrics">
+      <div class="metric"><div class="mv">${p.totalTime} min</div><div class="ml">Tiempo</div></div>
+      <div class="metric"><div class="mv">${p.totalDist.toFixed(1)} km</div><div class="ml">Distancia</div></div>
+      <div class="metric"><div class="mv">${p.stores.length}</div><div class="ml">Tiendas</div></div>
+    </div></div>`;
+
+  html+=`<div class="sec-title">Paradas</div>`;
+  p.stores.forEach((stop,i)=>{
+    html+=`<div class="stop"><div class="stop-head"><div class="stop-num">${i+1}</div><div class="stop-body"><div class="stop-name">${stop.store.name}</div><div class="stop-addr">${stop.store.retailer} - ${stop.store.addr}</div></div><div class="stop-cost">${fmt(stop.productCost)}</div></div>
+      <div class="stop-items">${stop.items.map(item=>`<div class="si-row"><span class="si-dot">${item.promo?I.tag:I.check}</span><span class="si-n">${esc(item.name)}</span><span class="si-q">x${item.qty}</span><span class="si-p">${fmt(item.lineCost)}</span></div>`).join('')}</div>
+      ${stop.promos.length?`<div class="promo-row">${stop.promos.map(p=>`<span class="tag">${I.tag} ${p}</span>`).join('')}</div>`:''}</div>`;
+  });
+
+  html+=`<div class="sec-title">Por que este plan?</div>`;
+  p.stores.forEach(s=>{html+=`<div class="exp"><div class="exp-icon">${I.check}</div><div class="exp-text">Recomendamos <strong>${s.store.retailer}</strong> porque ${s.items.length} productos estan disponibles a ${fmt(s.productCost)}.</div></div>`});
+  if(p.savings>0)html+=`<div class="exp"><div class="exp-icon">${I.dollar}</div><div class="exp-text">Ahorras <strong>${fmt(p.savings)}</strong> comparado con la opcion mas cara (${fmt(p.baseline)}).</div></div>`;
+  if(p.totalTransport>0)html+=`<div class="exp"><div class="exp-icon">${I.car}</div><div class="exp-text">Costo de transporte estimado: <strong>${fmt(p.totalTransport)}</strong>.</div></div>`;
+
+  html+=`<div class="sec-title">Notas</div><div class="assume">Los precios son aproximados y pueden variar.</div><div class="assume">Tiempos de viaje son estimados.</div><div class="assume">La disponibilidad no esta confirmada.</div>`;
+
+  $('s-plan').innerHTML=`<div class="navbar"><button class="icon-btn" onclick="go(D._planSource==='plans'?'s-plans':'s-review');D._planSource=null">${I.back}</button><h2>Tu plan optimizado</h2></div><div class="content">${html}</div><div class="bottom"><button class="btn btn-p" onclick="startMission()">Iniciar compra</button></div>`;
+}
+
+// ─── MISSION ───
+function startMission(){
+  const p=D.plan;
+  D.mission={items:p.stores.flatMap(s=>s.items.map(item=>({...item,storeName:s.store.name,storeId:s.store.id,status:'pending',actualPrice:null}))),startTime:Date.now()};
+  saveState();renderMissionScreen();go('s-mission');
+}
+function renderMissionScreen(){
+  const m=D.mission;if(!m)return;
+  const total=m.items.length;const found=m.items.filter(i=>i.status==='found').length;const nf=m.items.filter(i=>i.status==='notfound').length;const done=found+nf;const pct=total?Math.round((done/total)*100):0;
+
+  let html=`<div class="navbar"><button class="icon-btn" onclick="go('s-plan')">${I.back}</button><h2>En compras</h2><button class="btn btn-sm btn-s" style="color:var(--err);border-color:var(--err)" onclick="D.mission=null;saveState();go('s-home')">Cancelar</button></div>`;
+  html+=`<div style="padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border)"><div class="prog"><div class="prog-fill" style="width:${pct}%"></div></div><div class="prog-text">${done}/${total} (${pct}%)</div></div>`;
+  html+=`<div class="content">`;
+
+  const pending=m.items.filter(i=>i.status==='pending');
+  const foundI=m.items.filter(i=>i.status==='found');
+  const notFoundI=m.items.filter(i=>i.status==='notfound');
+
+  if(pending.length){html+=`<div class="sec-title">Por comprar (${pending.length})</div>`;pending.forEach(item=>{html+=`<div class="mi"><div class="mi-info"><div class="mi-name">${esc(item.name)}</div><div class="mi-sub">Esperado: ${fmt(item.price*item.qty)} - ${esc(item.storeName)}</div></div><div class="mi-acts"><button class="mi-btn ok" onclick="markItem('${item.id}','found')" title="Encontrado">${I.check}</button><button class="mi-btn no" onclick="markItem('${item.id}','notfound')" title="No encontrado">${I.x}</button></div></div>`})}
+  if(foundI.length){html+=`<div class="sec-title">Encontrados (${foundI.length})</div>`;foundI.forEach(item=>{html+=`<div class="mi found"><div class="mi-info"><div class="mi-name">${esc(item.name)}</div><div class="mi-sub">${esc(item.storeName)}</div></div></div>`})}
+  if(notFoundI.length){html+=`<div class="sec-title">No encontrados (${notFoundI.length})</div>`;notFoundI.forEach(item=>{html+=`<div class="mi missed"><div class="mi-info"><div class="mi-name">${esc(item.name)}</div><div class="mi-sub">No disponible</div></div></div>`})}
+
+  html+=`</div>`;
+  if(done>=total&&found>0)html+=`<div class="bottom"><button class="btn btn-p" onclick="completeMission()">Finalizar compra</button></div>`;
+
+  $('s-mission').innerHTML=html;
+}
+function markItem(id,status){const m=D.mission;const item=m.items.find(i=>i.id===id);if(item){item.status=status;saveState();renderMissionScreen()}}
+function completeMission(){
+  const m=D.mission;const found=m.items.filter(i=>i.status==='found');
+  const spent=found.reduce((a,i)=>a+i.price*i.qty,0);const planned=found.reduce((a,i)=>a+i.lineCost,0);
+  const saved=Math.max(0,planned-spent);D.totalSaved+=saved;
+  D.lists.push({id:'l_'+Date.now(),title:D.items.map(i=>i.name).join(', ').substring(0,60),items:D.items.length,date:new Date().toISOString(),saved});
+  D.mission=null;saveState();updateHomeStats();showToast('Compra completada! Total: '+fmt(spent));go('s-home');
+}
+
+// ─── HOME STATS ───
+function updateHomeStats(){
+  if(D.lists.length>0||D.plans.length>0){
+    D._hasStats=true;saveState();
+  }
+}
+
+// ─── SCREEN ROUTER ───
+function renderScreen(id){
+  switch(id){
+    case 's-onboard':renderOnboard();break;
+    case 's-home':renderHome();break;
+    case 's-lists':renderLists();break;
+    case 's-plans':renderPlans();break;
+    case 's-profile':renderProfile();break;
+    case 's-create':renderCreate();break;
+    case 's-review':renderReview();break;
+    case 's-plan':renderPlan();break;
+    case 's-mission':renderMissionScreen();break;
+    case 's-settings-vehicles':renderVehicles();break;
+    case 's-settings-appearance':renderAppearance();break;
+    case 's-settings-location':renderLocation();break;
+  }
+}
+
+// ─── CLOCK ───
+function updateClock(){const n=new Date();$('clock').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')}
+updateClock();setInterval(updateClock,30000);
+
+// ─── SYSTEM THEME LISTENER ───
+window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if(D.preferences.theme==='system')applyTheme()});
+
+// ─── INIT ───
+applyTheme();
+if(D.user&&D.onboarded){go('s-home')}
+else if(D.user&&!D.onboarded){go('s-onboard')}
+else{go('s-login')}
+</script>
+</body>
+</html>

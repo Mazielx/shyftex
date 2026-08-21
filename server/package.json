@@ -1,0 +1,39 @@
+{
+  "name": "shopping-optimizer-server",
+  "version": "1.0.0",
+  "description": "Backend API server for Shopping Optimizer",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma migrate reset --force"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.0.0",
+    "@fastify/jwt": "^9.0.0",
+    "@fastify/rate-limit": "^10.0.0",
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^17.4.2",
+    "fastify": "^5.4.0",
+    "pg": "^8.23.0",
+    "stripe": "^22.5.0",
+    "typescript": "~6.0.3",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.23.1",
+    "@types/uuid": "^10.0.0",
+    "prisma": "^7.9.1",
+    "tsx": "^4.0.0"
+  },
+  "type": "module",
+  "private": true
+}
