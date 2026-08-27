@@ -2,16 +2,12 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { colors, spacing, borderRadius, shadows, typography } from '../../config/theme';
+import { colors, spacing, borderRadius, shadows, typography, formatCurrency } from '../../config/theme';
 import { Store, StoreService } from '../../domain/entities/Store';
 import { Product } from '../../domain/entities/Product';
 import { Promotion, PromotionType } from '../../domain/entities/Promotion';
 import { Price } from '../../domain/entities/Price';
-import { Badge } from '../../components/ui/Badge';
-import { EmptyState } from '../../components/ui/EmptyState';
-import { PriceTag } from '../../components/ui/PriceTag';
 import { Money } from '../../domain/valueObjects/Money';
-import { formatCurrency } from '../../lib/format';
 
 const SERVICE_CONFIG: Record<
   StoreService,
@@ -67,13 +63,16 @@ export default function StoreDetailScreen({
           <Text style={styles.headerTitle}>Detalle de tienda</Text>
           <View style={styles.headerRight} />
         </View>
-        <EmptyState
-          icon="storefront-outline"
-          title="Tienda no encontrada"
-          description="No se pudo cargar la información de esta tienda."
-          actionLabel="Volver"
-          onAction={() => router.back()}
-        />
+        <View style={styles.emptyState}>
+          <Ionicons name="storefront-outline" size={64} color={colors.textTertiary} />
+          <Text style={styles.emptyTitle}>Tienda no encontrada</Text>
+          <Text style={styles.emptyDescription}>
+            No se pudo cargar la información de esta tienda.
+          </Text>
+          <TouchableOpacity style={styles.emptyButton} onPress={() => router.back()}>
+            <Text style={styles.emptyButtonText}>Volver</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
@@ -103,11 +102,18 @@ export default function StoreDetailScreen({
           <View style={styles.storeHeader}>
             <View style={styles.storeNameRow}>
               <Text style={styles.storeName}>{store.name}</Text>
-              <Badge
-                label={isOpen ? 'Abierto' : 'Cerrado'}
-                color={isOpen ? colors.success : colors.error}
-                size="sm"
-              />
+              <View
+                style={[
+                  styles.inlineBadge,
+                  { backgroundColor: (isOpen ? colors.success : colors.error) + '20' },
+                ]}
+              >
+                <Text
+                  style={[styles.inlineBadgeText, { color: isOpen ? colors.success : colors.error }]}
+                >
+                  {isOpen ? 'Abierto' : 'Cerrado'}
+                </Text>
+              </View>
             </View>
             <Text style={styles.retailerName}>{store.retailerName}</Text>
           </View>
@@ -215,7 +221,22 @@ export default function StoreDetailScreen({
                       {product.brand} · {product.defaultUnit}
                     </Text>
                   </View>
-                  <PriceTag price={price.regularPrice} salePrice={price.salePrice} size="sm" />
+                  <View style={styles.priceTag}>
+                    {price.salePrice ? (
+                      <>
+                        <Text style={styles.priceSale}>
+                          {formatCurrency(price.salePrice.toDecimal())}
+                        </Text>
+                        <Text style={styles.priceRegular}>
+                          {formatCurrency(price.regularPrice.toDecimal())}
+                        </Text>
+                      </>
+                    ) : (
+                      <Text style={styles.priceSingle}>
+                        {formatCurrency(price.regularPrice.toDecimal())}
+                      </Text>
+                    )}
+                  </View>
                 </View>
               ))}
             </View>
@@ -234,16 +255,24 @@ export default function StoreDetailScreen({
                 </View>
                 <Text style={styles.promoDescription}>{promo.description}</Text>
                 <View style={styles.promoMeta}>
-                  <Badge label={PROMO_TYPE_LABELS[promo.type]} color={colors.savings} size="sm" />
+                  <View style={[styles.inlineBadge, { backgroundColor: colors.savings + '20' }]}>
+                    <Text style={[styles.inlineBadgeText, { color: colors.savings }]}>
+                      {PROMO_TYPE_LABELS[promo.type]}
+                    </Text>
+                  </View>
                   {promo.cardRequired && (
-                    <Badge
-                      label={`Requiere ${promo.cardBrand ?? 'tarjeta'}`}
-                      color={colors.warning}
-                      size="sm"
-                    />
+                    <View style={[styles.inlineBadge, { backgroundColor: colors.warning + '20' }]}>
+                      <Text style={[styles.inlineBadgeText, { color: colors.warning }]}>
+                        Requiere {promo.cardBrand ?? 'tarjeta'}
+                      </Text>
+                    </View>
                   )}
                   {promo.membershipRequired && (
-                    <Badge label="Membresía" color={colors.secondary} size="sm" />
+                    <View style={[styles.inlineBadge, { backgroundColor: colors.secondary + '20' }]}>
+                      <Text style={[styles.inlineBadgeText, { color: colors.secondary }]}>
+                        Membresía
+                      </Text>
+                    </View>
                   )}
                 </View>
               </View>
@@ -281,7 +310,7 @@ const styles = StyleSheet.create({
   backButton: { padding: spacing.xs },
   headerTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     flex: 1,
     textAlign: 'center',
@@ -296,7 +325,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
@@ -311,7 +340,7 @@ const styles = StyleSheet.create({
   },
   storeName: {
     fontSize: typography.fontSize.xxl,
-    fontWeight: '700',
+    fontWeight: typography.fontWeight.bold,
     color: colors.textPrimary,
   },
   retailerName: {
@@ -376,7 +405,7 @@ const styles = StyleSheet.create({
   },
   dayTextToday: {
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   hoursText: {
     fontSize: typography.fontSize.md,
@@ -384,7 +413,7 @@ const styles = StyleSheet.create({
   },
   hoursTextToday: {
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   todayNote: {
     fontSize: typography.fontSize.sm,
@@ -420,7 +449,7 @@ const styles = StyleSheet.create({
   serviceLabel: {
     fontSize: typography.fontSize.sm,
     color: colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
   },
   // Products
   emptyProducts: {
@@ -452,7 +481,7 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: typography.fontSize.md,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
   productBrand: {
@@ -476,7 +505,7 @@ const styles = StyleSheet.create({
   },
   promoName: {
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
   promoDescription: {
@@ -516,6 +545,63 @@ const styles = StyleSheet.create({
   routeButtonText: {
     color: colors.white,
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
+  },
+  // Inline components (replacing dead Badge/EmptyState/PriceTag)
+  inlineBadge: {
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+  },
+  inlineBadgeText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xxxl,
+  },
+  emptyTitle: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.textPrimary,
+    marginTop: spacing.lg,
+  },
+  emptyDescription: {
+    fontSize: typography.fontSize.md,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+  },
+  emptyButton: {
+    marginTop: spacing.xl,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+  },
+  emptyButtonText: {
+    color: colors.white,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  priceTag: {
+    alignItems: 'flex-end',
+  },
+  priceSale: {
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.savings,
+  },
+  priceRegular: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textTertiary,
+    textDecorationLine: 'line-through',
+  },
+  priceSingle: {
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.textPrimary,
   },
 });

@@ -2,7 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { colors, spacing, borderRadius, shadows, typography } from '../../config/theme';
+import {
+  colors,
+  spacing,
+  borderRadius,
+  shadows,
+  typography,
+  formatCurrency,
+} from '../../config/theme';
 import { useListStore, useOptimizationStore, useAuthStore } from '../../stores/AppStore';
 
 export default function HomeScreen() {
@@ -19,151 +26,180 @@ export default function HomeScreen() {
     return sum + (plan.estimatedSavings?.toDecimal() ?? 0);
   }, 0);
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Buenos dias';
+    if (hour < 18) return 'Buenas tardes';
+    return 'Buenas noches';
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Greeting */}
-        <View style={styles.greeting}>
-          <Text style={styles.greetingText}>Hola{user?.name ? `, ${user.name}` : ''}</Text>
-          <Text style={styles.greetingSubtext}>¿Qué necesitas comprar hoy?</Text>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>{getGreeting()}</Text>
+            <Text style={styles.userName}>{user?.name ?? 'Usuario'}</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.avatarBtn}
+            onPress={() => router.push('/(tabs)/profile')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.avatarText}>{user?.name?.charAt(0)?.toUpperCase() ?? '?'}</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Main CTA */}
+        {/* Primary CTA */}
         <TouchableOpacity
-          style={styles.ctaButton}
+          style={styles.heroCard}
           onPress={() => router.push('/(shopping)/create-list')}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
         >
-          <View style={styles.ctaIcon}>
-            <Ionicons name="add-circle" size={32} color={colors.white} />
-          </View>
-          <View style={styles.ctaContent}>
-            <Text style={styles.ctaTitle}>Nueva compra</Text>
-            <Text style={styles.ctaSubtitle}>
+          <View style={styles.heroContent}>
+            <Text style={styles.heroTitle}>Nueva compra</Text>
+            <Text style={styles.heroSubtitle}>
               Escribe tu lista y encontramos los mejores precios
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={24} color={colors.white} />
+          <View style={styles.heroIconWrap}>
+            <Ionicons name="arrow-forward" size={20} color={colors.white} />
+          </View>
         </TouchableOpacity>
 
-        {/* Quick Stats */}
-        {totalSavings > 0 && (
-          <View style={styles.statsCard}>
-            <View style={styles.statItem}>
-              <Ionicons name="wallet" size={24} color={colors.savings} />
-              <View>
-                <Text style={styles.statValue}>${totalSavings.toFixed(2)}</Text>
-                <Text style={styles.statLabel}>Ahorro total</Text>
-              </View>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Ionicons name="receipt" size={24} color={colors.secondary} />
-              <View>
-                <Text style={styles.statValue}>{lists.length}</Text>
-                <Text style={styles.statLabel}>Listas creadas</Text>
-              </View>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Ionicons name="map" size={24} color={colors.warning} />
-              <View>
-                <Text style={styles.statValue}>{plans.length}</Text>
-                <Text style={styles.statLabel}>Planes generados</Text>
-              </View>
-            </View>
+        {/* Stats Row */}
+        {(totalSavings > 0 || lists.length > 0) && (
+          <View style={styles.statsRow}>
+            <StatCard
+              icon="wallet"
+              value={formatCurrency(totalSavings)}
+              label="Ahorrado"
+              color={colors.success}
+            />
+            <StatCard
+              icon="list"
+              value={`${lists.length}`}
+              label="Listas"
+              color={colors.secondary}
+            />
+            <StatCard
+              icon="map"
+              value={`${plans.length}`}
+              label="Planes"
+              color={colors.warning}
+            />
           </View>
         )}
 
         {/* Recent List */}
         {recentList && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Última lista</Text>
+            <Text style={styles.sectionTitle}>Tu ultima lista</Text>
             <TouchableOpacity
               style={styles.recentCard}
               onPress={() => router.push('/(shopping)/list-detail')}
+              activeOpacity={0.7}
             >
-              <View style={styles.recentIcon}>
-                <Ionicons name="list" size={20} color={colors.primary} />
-              </View>
+              <View style={styles.recentDot} />
               <View style={styles.recentContent}>
                 <Text style={styles.recentTitle} numberOfLines={1}>
                   {recentList.title}
                 </Text>
                 <Text style={styles.recentMeta}>
-                  {recentList.itemCount} productos · {recentList.status}
+                  {recentList.itemCount} productos
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Features */}
+        {/* How it Works */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Cómo funciona</Text>
-          <View style={styles.featuresGrid}>
-            <FeatureCard
+          <Text style={styles.sectionTitle}>Como funciona</Text>
+          <View style={styles.stepsContainer}>
+            <StepItem
+              number="1"
               icon="document-text"
               title="Sube tu lista"
-              description="Escribe, pega o usa la voz"
-              color={colors.secondary}
+              description="Escribe, pega o dicta tu lista de compras"
             />
-            <FeatureCard
+            <View style={styles.stepConnector} />
+            <StepItem
+              number="2"
               icon="search"
-              title="Comparamos"
-              description="Precios, promociones y distancias"
-              color={colors.primary}
+              title="Comparamos precios"
+              description="Revisamos tiendas, promociones y disponibilidad"
             />
-            <FeatureCard
+            <View style={styles.stepConnector} />
+            <StepItem
+              number="3"
               icon="map"
-              title="Optimizamos"
-              description="La mejor ruta y estrategia"
-              color={colors.warning}
-            />
-            <FeatureCard
-              icon="checkmark-circle"
-              title="Compra"
-              description="Te guiamos paso a paso"
-              color={colors.savings}
+              title="Optimizamos la ruta"
+              description="La mejor estrategia para ahorrar tiempo y dinero"
             />
           </View>
         </View>
 
-        {/* Tips */}
-        <View style={styles.tipsSection}>
-          <Text style={styles.sectionTitle}>Consejo del día</Text>
-          <View style={styles.tipCard}>
-            <Ionicons name="bulb" size={20} color={colors.warning} />
-            <Text style={styles.tipText}>
-              Sé específico con las marcas cuando las tengas claras. "2 litros de leche Lala"
-              produce mejores resultados que solo "leche".
-            </Text>
+        {/* Tip */}
+        <View style={styles.tipCard}>
+          <View style={styles.tipIconWrap}>
+            <Ionicons name="bulb-outline" size={18} color={colors.warning} />
           </View>
+          <Text style={styles.tipText}>
+            Tip: Se concreta con las marcas para mejores resultados. "2L leche Lala" funciona
+            mejor que solo "leche".
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function FeatureCard({
+function StatCard({
   icon,
-  title,
-  description,
+  value,
+  label,
   color,
 }: {
   icon: string;
-  title: string;
-  description: string;
+  value: string;
+  label: string;
   color: string;
 }) {
   return (
-    <View style={styles.featureCard}>
-      <View style={[styles.featureIcon, { backgroundColor: color + '15' }]}>
-        <Ionicons name={icon as any} size={24} color={color} />
+    <View style={styles.statCard}>
+      <View style={[styles.statIconWrap, { backgroundColor: color + '12' }]}>
+        <Ionicons name={icon as any} size={16} color={color} />
       </View>
-      <Text style={styles.featureTitle}>{title}</Text>
-      <Text style={styles.featureDesc}>{description}</Text>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function StepItem({
+  number,
+  icon,
+  title,
+  description,
+}: {
+  number: string;
+  icon: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <View style={styles.stepItem}>
+      <View style={styles.stepNumber}>
+        <Text style={styles.stepNumberText}>{number}</Text>
+      </View>
+      <View style={styles.stepContent}>
+        <Text style={styles.stepTitle}>{title}</Text>
+        <Text style={styles.stepDesc}>{description}</Text>
+      </View>
+      <Ionicons name={icon as any} size={20} color={colors.textTertiary} />
     </View>
   );
 }
@@ -173,24 +209,45 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  scrollContent: {
+  scroll: {
     padding: spacing.lg,
-    paddingBottom: 100,
+    paddingBottom: 120,
+  },
+  // Header
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xxl,
   },
   greeting: {
-    marginBottom: spacing.xl,
-  },
-  greetingText: {
-    fontSize: typography.fontSize.xxxl,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  greetingSubtext: {
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
     color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  userName: {
+    fontSize: typography.fontSize.xxl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.textPrimary,
     marginTop: spacing.xs,
   },
-  ctaButton: {
+  avatarBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.primary,
+  },
+  // Hero CTA
+  heroCard: {
     backgroundColor: colors.primary,
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
@@ -199,84 +256,93 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
     ...shadows.md,
   },
-  ctaIcon: {
-    marginRight: spacing.md,
-  },
-  ctaContent: {
+  heroContent: {
     flex: 1,
   },
-  ctaTitle: {
+  heroTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '700',
+    fontWeight: typography.fontWeight.bold,
     color: colors.white,
   },
-  ctaSubtitle: {
+  heroSubtitle: {
     fontSize: typography.fontSize.sm,
     color: colors.white,
-    opacity: 0.9,
-    marginTop: 2,
+    opacity: 0.85,
+    marginTop: spacing.xs,
+    lineHeight: typography.fontSize.sm * typography.lineHeight.relaxed,
   },
-  statsCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+  heroIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
-    marginBottom: spacing.xl,
-    ...shadows.sm,
+    justifyContent: 'center',
   },
-  statItem: {
-    alignItems: 'center',
+  // Stats
+  statsRow: {
     flexDirection: 'row',
     gap: spacing.sm,
+    marginBottom: spacing.xl,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    alignItems: 'center',
+    ...shadows.xs,
+  },
+  statIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
   },
   statValue: {
     fontSize: typography.fontSize.lg,
-    fontWeight: '700',
+    fontWeight: typography.fontWeight.bold,
     color: colors.textPrimary,
   },
   statLabel: {
     fontSize: typography.fontSize.xs,
     color: colors.textSecondary,
+    marginTop: 2,
   },
-  statDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: colors.border,
-  },
+  // Sections
   section: {
-    marginBottom: spacing.xl,
+    marginBottom: spacing.sectionGap,
   },
   sectionTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
+  // Recent
   recentCard: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
-    ...shadows.sm,
+    ...shadows.xs,
   },
-  recentIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
+  recentDot: {
+    width: 10,
+    height: 10,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary,
     marginRight: spacing.md,
   },
   recentContent: {
     flex: 1,
   },
   recentTitle: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
   recentMeta: {
@@ -284,51 +350,73 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 2,
   },
-  featuresGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
+  // Steps
+  stepsContainer: {
+    gap: 0,
   },
-  featureCard: {
-    width: '47%',
+  stepItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    ...shadows.sm,
+    ...shadows.xs,
   },
-  featureIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: borderRadius.md,
+  stepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.sm,
+    marginRight: spacing.md,
   },
-  featureTitle: {
+  stepNumberText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.white,
+  },
+  stepContent: {
+    flex: 1,
+  },
+  stepTitle: {
     fontSize: typography.fontSize.md,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
-  featureDesc: {
+  stepDesc: {
     fontSize: typography.fontSize.sm,
     color: colors.textSecondary,
-    marginTop: 4,
+    marginTop: 2,
   },
-  tipsSection: {
-    marginBottom: spacing.xl,
+  stepConnector: {
+    width: 2,
+    height: spacing.md,
+    backgroundColor: colors.border,
+    marginLeft: spacing.lg + 13,
+    marginVertical: spacing.xs,
   },
+  // Tip
   tipCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     backgroundColor: colors.warningLight,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    flexDirection: 'row',
     gap: spacing.md,
-    alignItems: 'flex-start',
+  },
+  tipIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(245,158,11,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tipText: {
     flex: 1,
-    fontSize: typography.fontSize.md,
-    color: colors.textPrimary,
-    lineHeight: 22,
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+    lineHeight: typography.fontSize.sm * typography.lineHeight.relaxed,
   },
 });

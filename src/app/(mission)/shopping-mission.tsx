@@ -7,16 +7,52 @@ import {
   ScrollView,
   SafeAreaView,
   Alert,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { colors, spacing, borderRadius, shadows, typography } from '../../config/theme';
+import {
+  colors,
+  spacing,
+  borderRadius,
+  shadows,
+  typography,
+  formatCurrency,
+} from '../../config/theme';
 import { useMissionStore } from '../../stores/AppStore';
 import { MissionItemStatus } from '../../domain/entities/ShoppingMission';
 
 export default function ShoppingMissionScreen() {
   const { currentMission, markItem, completeMission, cancelMission } = useMissionStore();
   const [activeTab, setActiveTab] = useState<'checklist' | 'map'>('checklist');
+  const [priceModalVisible, setPriceModalVisible] = useState(false);
+  const [priceModalItemId, setPriceModalItemId] = useState<string | null>(null);
+  const [priceModalProductName, setPriceModalProductName] = useState('');
+  const [priceInput, setPriceInput] = useState('');
+
+  const openPriceModal = (itemId: string, productName: string) => {
+    setPriceModalItemId(itemId);
+    setPriceModalProductName(productName);
+    setPriceInput('');
+    setPriceModalVisible(true);
+  };
+
+  const closePriceModal = () => {
+    setPriceModalVisible(false);
+    setPriceModalItemId(null);
+    setPriceInput('');
+  };
+
+  const confirmPrice = () => {
+    const parsed = parseFloat(priceInput.replace(',', '.'));
+    if (parsed > 0 && priceModalItemId) {
+      markItem(priceModalItemId, MissionItemStatus.FOUND, parsed);
+      closePriceModal();
+    }
+  };
 
   if (!currentMission) {
     return (
@@ -139,12 +175,7 @@ export default function ShoppingMissionScreen() {
                   key={item.id}
                   item={item}
                   onFound={() => {
-                    Alert.prompt('Precio real', `¿Cuánto costó ${item.productName}?`, (price) => {
-                      const parsed = parseFloat(price ?? '0');
-                      if (parsed > 0) {
-                        markItem(item.id, MissionItemStatus.FOUND, parsed);
-                      }
-                    });
+                    openPriceModal(item.id, item.productName);
                   }}
                   onNotFound={() => {
                     Alert.alert('Producto no encontrado', `¿Qué hacer con "${item.productName}"?`, [
@@ -170,7 +201,7 @@ export default function ShoppingMissionScreen() {
                   <View style={styles.itemInfo}>
                     <Text style={styles.itemName}>{item.productName}</Text>
                     <Text style={styles.itemPrice}>
-                      ${item.actualPrice?.toFixed(2) ?? '?'} x{item.quantity}
+                      {formatCurrency(item.actualPrice ?? 0)} x{item.quantity}
                     </Text>
                   </View>
                 </View>
@@ -200,19 +231,19 @@ export default function ShoppingMissionScreen() {
           <View style={styles.summaryCard}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Esperado</Text>
-              <Text style={styles.summaryValue}>${totalExpected.toFixed(2)}</Text>
+              <Text style={styles.summaryValue}>{formatCurrency(totalExpected)}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Gastado</Text>
               <Text style={[styles.summaryValue, styles.summarySpent]}>
-                ${totalSpent.toFixed(2)}
+                {formatCurrency(totalSpent)}
               </Text>
             </View>
             {totalSpent > 0 && totalSpent < totalExpected && (
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Ahorro</Text>
                 <Text style={[styles.summaryValue, styles.summarySaved]}>
-                  -${(totalExpected - totalSpent).toFixed(2)}
+                  -{formatCurrency(totalExpected - totalSpent)}
                 </Text>
               </View>
             )}
@@ -245,7 +276,7 @@ export default function ShoppingMissionScreen() {
             style={styles.completeButton}
             onPress={() => {
               completeMission();
-              Alert.alert('¡Compra completada!', `Total gastado: $${totalSpent.toFixed(2)}`, [
+              Alert.alert('¡Compra completada!', `Total gastado: ${formatCurrency(totalSpent)}`, [
                 {
                   text: 'Ver resumen',
                   onPress: () => router.replace('/(tabs)'),
@@ -258,6 +289,57 @@ export default function ShoppingMissionScreen() {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Price Input Modal */}
+      <Modal
+        visible={priceModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closePriceModal}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={closePriceModal}
+          />
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Precio real</Text>
+            <Text style={styles.modalSubtitle}>
+              ¿Cuánto costó {priceModalProductName}?
+            </Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="0.00"
+              placeholderTextColor={colors.textTertiary}
+              keyboardType="decimal-pad"
+              value={priceInput}
+              onChangeText={setPriceInput}
+              autoFocus
+              selectTextOnFocus
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalCancelButton} onPress={closePriceModal}>
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.modalConfirmButton,
+                  (!priceInput || parseFloat(priceInput.replace(',', '.')) <= 0) &&
+                    styles.modalConfirmDisabled,
+                ]}
+                onPress={confirmPrice}
+                disabled={!priceInput || parseFloat(priceInput.replace(',', '.')) <= 0}
+              >
+                <Text style={styles.modalConfirmText}>Confirmar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -276,7 +358,7 @@ function MissionItemCard({
       <View style={styles.itemInfo}>
         <Text style={styles.itemName}>{item.productName}</Text>
         <Text style={styles.itemPrice}>
-          Esperado: ${item.expectedPrice.toFixed(2)} x{item.quantity}
+          Esperado: {formatCurrency(item.expectedPrice)} x{item.quantity}
         </Text>
       </View>
       <View style={styles.itemActions}>
@@ -309,7 +391,7 @@ const styles = StyleSheet.create({
   backButton: { padding: spacing.xs },
   headerTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
   cancelButton: {
@@ -318,7 +400,7 @@ const styles = StyleSheet.create({
   cancelText: {
     fontSize: typography.fontSize.sm,
     color: colors.error,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
   },
   progressContainer: {
     paddingHorizontal: spacing.lg,
@@ -366,7 +448,7 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   content: {
     padding: spacing.lg,
@@ -377,7 +459,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
@@ -395,7 +477,7 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: typography.fontSize.md,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
     color: colors.textPrimary,
   },
   itemPrice: {
@@ -463,7 +545,7 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     fontSize: typography.fontSize.md,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
   summarySpent: {
@@ -494,7 +576,7 @@ const styles = StyleSheet.create({
   suggestionButtonText: {
     fontSize: typography.fontSize.sm,
     color: colors.info,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   bottomBar: {
     position: 'absolute',
@@ -521,7 +603,7 @@ const styles = StyleSheet.create({
   completeButtonText: {
     color: colors.white,
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   emptyState: {
     flex: 1,
@@ -531,7 +613,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     marginTop: spacing.lg,
   },
@@ -550,6 +632,85 @@ const styles = StyleSheet.create({
   },
   emptyButtonText: {
     color: colors.white,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  modalContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xl,
+    padding: spacing.xxl,
+    width: '85%',
+    maxWidth: 360,
+    ...shadows.lg,
+  },
+  modalTitle: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: typography.fontSize.md,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.textPrimary,
+    textAlign: 'center',
+    backgroundColor: colors.background,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xl,
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.textSecondary,
+  },
+  modalConfirmButton: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+  },
+  modalConfirmDisabled: {
+    opacity: 0.4,
+  },
+  modalConfirmText: {
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.white,
   },
 });

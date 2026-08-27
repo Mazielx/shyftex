@@ -10,9 +10,58 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { colors, spacing, borderRadius, shadows, typography } from '../../config/theme';
+import { colors, spacing, borderRadius, shadows, typography, commonStyles } from '../../config/theme';
 import { useAuthStore, useSettingsStore } from '../../stores/AppStore';
 import { useLocation } from '../../hooks/useLocation';
+
+const ICON_BG_SIZE = 34;
+
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+
+interface SettingsItemProps {
+  icon: IoniconsName;
+  iconColor?: string;
+  iconBg?: string;
+  label: string;
+  value?: string;
+  onPress: () => void;
+  showChevron?: boolean;
+  last?: boolean;
+}
+
+function SettingsItem({
+  icon,
+  iconColor = colors.primary,
+  iconBg = colors.primaryLight,
+  label,
+  value,
+  onPress,
+  showChevron = true,
+  last = false,
+}: SettingsItemProps) {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.6}
+      onPress={onPress}
+      style={[styles.item, !last && styles.itemBorder]}
+    >
+      <View style={[styles.iconCircle, { backgroundColor: iconBg }]}>
+        <Ionicons name={icon} size={17} color={iconColor} />
+      </View>
+      <View style={styles.itemContent}>
+        <Text style={styles.itemLabel}>{label}</Text>
+        {value ? <Text style={styles.itemValue}>{value}</Text> : null}
+      </View>
+      {showChevron && (
+        <Ionicons name="chevron-forward" size={17} color={colors.textTertiary} />
+      )}
+    </TouchableOpacity>
+  );
+}
+
+function SettingsGroup({ children }: { children: React.ReactNode }) {
+  return <View style={styles.group}>{children}</View>;
+}
 
 export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
@@ -33,216 +82,245 @@ export default function ProfileScreen() {
     ]);
   };
 
+  const vehicleText = settings.vehicle
+    ? `${settings.vehicle.make} ${settings.vehicle.model}`
+    : 'No configurado';
+
+  const timeValueText = settings.valueOfTimePerHour
+    ? `$${settings.valueOfTimePerHour}/hora`
+    : 'No configurado';
+
+  const membershipText = settings.hasMembership ? 'Activada' : 'No activada';
+
+  const cardsText =
+    settings.acceptedCardBrands.length > 0
+      ? settings.acceptedCardBrands.join(', ')
+      : 'Ninguna';
+
+  const locationText = location
+    ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
+    : hasPermission
+      ? 'Obteniendo...'
+      : 'Sin permiso';
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+    <SafeAreaView style={commonStyles.screenContainer}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Profile Header */}
-        <View style={styles.profileHeader}>
+        <View style={styles.header}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{user?.name?.charAt(0).toUpperCase() ?? '?'}</Text>
+            <Text style={styles.avatarText}>
+              {user?.name?.charAt(0).toUpperCase() ?? '?'}
+            </Text>
           </View>
           <Text style={styles.userName}>{user?.name ?? 'Usuario'}</Text>
           <Text style={styles.userEmail}>{user?.email ?? ''}</Text>
         </View>
 
-        {/* Settings Sections */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Transporte</Text>
+        {/* Transporte */}
+        <Text style={styles.sectionTitle}>Transporte</Text>
+        <SettingsGroup>
           <SettingsItem
             icon="car"
             label="Mi vehículo"
-            value={
-              settings.vehicle
-                ? `${settings.vehicle.make} ${settings.vehicle.model}`
-                : 'No configurado'
-            }
+            value={vehicleText}
             onPress={() => router.push('/(settings)/vehicle')}
           />
           <SettingsItem
-            icon="time"
+            icon="time-outline"
             label="Valor del tiempo"
-            value={
-              settings.valueOfTimePerHour
-                ? `$${settings.valueOfTimePerHour}/hora`
-                : 'No configurado'
-            }
+            value={timeValueText}
             onPress={() => {}}
+            last
           />
-        </View>
+        </SettingsGroup>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferencias</Text>
+        {/* Preferencias */}
+        <Text style={styles.sectionTitle}>Preferencias</Text>
+        <SettingsGroup>
           <SettingsItem
             icon="card"
             label="Membresías"
-            value={settings.hasMembership ? 'Activada' : 'No activada'}
+            value={membershipText}
             onPress={() => settings.setHasMembership(!settings.hasMembership)}
           />
           <SettingsItem
-            icon="keypad"
+            icon="wallet"
             label="Tarjetas aceptadas"
-            value={
-              settings.acceptedCardBrands.length > 0
-                ? settings.acceptedCardBrands.join(', ')
-                : 'Ninguna'
-            }
+            value={cardsText}
             onPress={() => {}}
+            last
           />
-        </View>
+        </SettingsGroup>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Cuenta</Text>
+        {/* Cuenta */}
+        <Text style={styles.sectionTitle}>Cuenta</Text>
+        <SettingsGroup>
           <SettingsItem
-            icon="time"
+            icon="list"
             label="Historial"
-            value="Listas y planes anteriores"
+            value="Listas y planes"
             onPress={() => router.push('/(tabs)/history')}
           />
           <SettingsItem
             icon="location"
             label="Ubicación"
-            value={
-              location
-                ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
-                : hasPermission
-                  ? 'Obteniendo...'
-                  : 'Sin permiso'
-            }
+            value={locationText}
+            iconColor={colors.info}
+            iconBg={colors.infoLight}
             onPress={() => {
               refreshLocation();
-              Alert.alert('Ubicación', 'Actualizando ubicación...');
             }}
+            showChevron={false}
           />
           <SettingsItem
-            icon="notifications"
+            icon="notifications-outline"
             label="Notificaciones"
             value="Configurar"
             onPress={() => {}}
           />
-          <SettingsItem icon="lock-closed" label="Privacidad" value="" onPress={() => {}} />
-        </View>
+          <SettingsItem
+            icon="lock-closed"
+            label="Privacidad"
+            onPress={() => {}}
+            last
+          />
+        </SettingsGroup>
 
         {/* Logout */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out" size={20} color={colors.error} />
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.logoutButton}
+          onPress={handleLogout}
+        >
+          <Ionicons name="log-out-outline" size={20} color={colors.error} />
           <Text style={styles.logoutText}>Cerrar sesión</Text>
         </TouchableOpacity>
+
+        <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function SettingsItem({
-  icon,
-  label,
-  value,
-  onPress,
-}: {
-  icon: string;
-  label: string;
-  value: string;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity style={styles.settingsItem} onPress={onPress}>
-      <Ionicons name={icon as any} size={20} color={colors.primary} />
-      <View style={styles.settingsItemContent}>
-        <Text style={styles.settingsItemLabel}>{label}</Text>
-        {value ? <Text style={styles.settingsItemValue}>{value}</Text> : null}
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-    </TouchableOpacity>
-  );
-}
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
+  scrollContent: {
+    paddingBottom: spacing.xxxxl,
   },
-  content: {
-    paddingBottom: 100,
-  },
-  profileHeader: {
+
+  /* Header */
+  header: {
     alignItems: 'center',
-    paddingVertical: spacing.xxxl,
+    paddingTop: spacing.xxl + spacing.lg,
+    paddingBottom: spacing.xxxl,
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    marginBottom: spacing.lg,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
+    ...shadows.md,
   },
   avatarText: {
-    fontSize: typography.fontSize.xxxl,
-    fontWeight: '700',
-    color: colors.white,
+    fontSize: 40,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.textInverse,
   },
   userName: {
     fontSize: typography.fontSize.xxl,
-    fontWeight: '700',
+    fontWeight: typography.fontWeight.bold,
     color: colors.textPrimary,
+    marginBottom: spacing.xs,
   },
   userEmail: {
     fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.regular,
     color: colors.textSecondary,
-    marginTop: spacing.xs,
   },
-  section: {
-    marginTop: spacing.xl,
-    paddingHorizontal: spacing.lg,
-  },
+
+  /* Sections */
   sectionTitle: {
     fontSize: typography.fontSize.sm,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textSecondary,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.8,
+    marginHorizontal: spacing.xxl,
     marginBottom: spacing.sm,
+    marginTop: spacing.xs,
   },
-  settingsItem: {
+  group: {
+    backgroundColor: colors.surface,
+    marginHorizontal: spacing.lg,
+    borderRadius: borderRadius.lg,
+    ...shadows.xs,
+  },
+
+  /* Items */
+  item: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.surface,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    marginBottom: spacing.xs,
-    ...shadows.sm,
+    paddingVertical: spacing.md + 2,
+    paddingHorizontal: spacing.lg,
   },
-  settingsItemContent: {
+  itemBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  iconCircle: {
+    width: ICON_BG_SIZE,
+    height: ICON_BG_SIZE,
+    borderRadius: ICON_BG_SIZE / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  itemContent: {
     flex: 1,
   },
-  settingsItemLabel: {
+  itemLabel: {
     fontSize: typography.fontSize.md,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
     color: colors.textPrimary,
   },
-  settingsItemValue: {
+  itemValue: {
     fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.regular,
     color: colors.textSecondary,
     marginTop: 2,
   },
+
+  /* Logout */
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    marginTop: spacing.xxl,
+    marginTop: spacing.xxxl,
     marginHorizontal: spacing.lg,
-    padding: spacing.lg,
+    paddingVertical: spacing.md + 2,
     backgroundColor: colors.errorLight,
     borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.error,
   },
   logoutText: {
     fontSize: typography.fontSize.md,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.error,
+  },
+
+  bottomSpacer: {
+    height: spacing.xxxl,
   },
 });

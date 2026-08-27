@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   backButton: { padding: spacing.xs },
   headerTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
   headerRight: { width: 32 },
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: typography.fontSize.md,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   },
   fuelTypeTextActive: {
     color: colors.white,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   saveButton: {
     backgroundColor: colors.primary,
@@ -226,6 +226,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: colors.white,
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
 });

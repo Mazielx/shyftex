@@ -1,12 +1,12 @@
 /**
  * useLocation hook.
  *
- * Automatically requests and manages user location on mount.
+ * Automatically requests and manages user location after authentication.
  * Updates the auth store with real coordinates from expo-location.
  * Falls back to CDMX defaults if permission denied.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuthStore } from '../stores/AppStore';
 import {
   getSmartLocation,
@@ -27,15 +27,17 @@ export interface UseLocationReturn {
   refreshLocation: () => Promise<void>;
 }
 
-export function useLocation(): UseLocationReturn {
+export function useLocation(enabled = true): UseLocationReturn {
   const [location, setLocation] = useState<LocationCoords | null>(null);
   const [hasPermission, setHasPermission] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const initialized = useRef(false);
 
-  const { setLocation: setUserLocation, isAuthenticated } = useAuthStore();
+  const { setLocation: setUserLocation } = useAuthStore();
 
   const refreshLocation = async () => {
+    if (!enabled) return;
     setIsLoading(true);
     setError(null);
 
@@ -57,10 +59,11 @@ export function useLocation(): UseLocationReturn {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (enabled && !initialized.current) {
+      initialized.current = true;
       refreshLocation();
     }
-  }, [isAuthenticated]);
+  }, [enabled]);
 
   return {
     location,

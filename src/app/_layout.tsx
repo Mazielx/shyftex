@@ -6,12 +6,16 @@ import { useAuthStore } from '../stores/AppStore';
 import { useLocation } from '../hooks/useLocation';
 
 /**
- * Initializes location tracking on app start.
- * Renders as a side-effect component (no UI).
+ * Initializes location tracking after authentication.
+ * Only fetches GPS when user is logged in.
  */
 function LocationInitializer() {
-  // This triggers the useLocation hook which auto-fetches location when authenticated
-  useLocation();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const restoreSession = useAuthStore((s) => s.restoreSession);
+
+  // Only fetch location after auth is confirmed
+  useLocation(isAuthenticated);
+
   return null;
 }
 
@@ -25,13 +29,16 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <LocationInitializer />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: colors.primary },
-          headerTintColor: colors.textInverse,
-          headerTitleStyle: { fontWeight: '600' },
+          headerStyle: { backgroundColor: colors.surface },
+          headerTintColor: colors.textPrimary,
+          headerTitleStyle: {
+            fontWeight: '600',
+            color: colors.textPrimary,
+          },
           contentStyle: { backgroundColor: colors.background },
         }}
       >

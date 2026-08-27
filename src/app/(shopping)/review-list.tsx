@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   backButton: { padding: spacing.xs },
   headerTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
   headerRight: { width: 32 },
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   countText: {
     fontSize: typography.fontSize.sm,
     color: colors.primary,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
   },
   content: {
     padding: spacing.lg,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     flex: 1,
   },
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: typography.fontSize.xs,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   itemMeta: {
     fontSize: typography.fontSize.sm,
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   },
   matchText: {
     fontSize: typography.fontSize.xs,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   itemExpanded: {
     paddingHorizontal: spacing.lg,
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: typography.fontSize.sm,
     color: colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
   },
   actionButton: {
     flexDirection: 'row',
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: typography.fontSize.md,
     color: colors.primary,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
   },
   bottomBar: {
     position: 'absolute',
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   optimizeButtonText: {
     color: colors.white,
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   loadingContainer: {
     alignItems: 'center',

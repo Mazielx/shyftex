@@ -1,8 +1,23 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { colors, spacing, borderRadius, shadows, typography } from '../../config/theme';
+import {
+  colors,
+  spacing,
+  borderRadius,
+  shadows,
+  typography,
+  commonStyles,
+  formatCurrency,
+} from '../../config/theme';
 import { useListStore, useOptimizationStore } from '../../stores/AppStore';
 import { ShoppingListStatus } from '../../domain/entities/ShoppingList';
 
@@ -13,13 +28,43 @@ interface HistoryStats {
   averageSavings: number;
 }
 
-const STATUS_CONFIG: Record<ShoppingListStatus, { label: string; color: string }> = {
-  [ShoppingListStatus.DRAFT]: { label: 'Borrador', color: colors.textTertiary },
-  [ShoppingListStatus.PARSED]: { label: 'Analizada', color: colors.info },
-  [ShoppingListStatus.REVIEWED]: { label: 'Revisada', color: colors.primary },
-  [ShoppingListStatus.OPTIMIZED]: { label: 'Optimizada', color: colors.savings },
-  [ShoppingListStatus.IN_PROGRESS]: { label: 'En progreso', color: colors.warning },
-  [ShoppingListStatus.COMPLETED]: { label: 'Completada', color: colors.success },
+const STATUS_CONFIG: Record<ShoppingListStatus, { label: string; color: string; bg: string }> = {
+  [ShoppingListStatus.DRAFT]: {
+    label: 'Borrador',
+    color: colors.textTertiary,
+    bg: colors.surfaceVariant,
+  },
+  [ShoppingListStatus.PARSED]: {
+    label: 'Analizada',
+    color: colors.info,
+    bg: colors.infoLight,
+  },
+  [ShoppingListStatus.REVIEWED]: {
+    label: 'Revisada',
+    color: colors.primary,
+    bg: colors.primaryLight,
+  },
+  [ShoppingListStatus.OPTIMIZED]: {
+    label: 'Optimizada',
+    color: colors.success,
+    bg: colors.successLight,
+  },
+  [ShoppingListStatus.IN_PROGRESS]: {
+    label: 'En progreso',
+    color: colors.warning,
+    bg: colors.warningLight,
+  },
+  [ShoppingListStatus.COMPLETED]: {
+    label: 'Completada',
+    color: colors.success,
+    bg: colors.successLight,
+  },
+};
+
+const PLAN_MODE_LABELS: Record<string, { label: string; icon: string }> = {
+  MAXIMUM_SAVINGS: { label: 'Máximo ahorro', icon: 'trending-down' },
+  BALANCED: { label: 'Equilibrado', icon: 'scale' },
+  MAXIMUM_CONVENIENCE: { label: 'Máxima comodidad', icon: 'speedometer' },
 };
 
 export default function HistoryScreen() {
@@ -29,11 +74,16 @@ export default function HistoryScreen() {
   const stats: HistoryStats = {
     totalLists: lists.length,
     totalPlans: plans.length,
-    totalSaved: plans.reduce((sum, plan) => sum + (plan.estimatedSavings?.toDecimal() ?? 0), 0),
+    totalSaved: plans.reduce(
+      (sum, plan) => sum + (plan.estimatedSavings?.toDecimal() ?? 0),
+      0,
+    ),
     averageSavings:
       plans.length > 0
-        ? plans.reduce((sum, plan) => sum + (plan.estimatedSavings?.toDecimal() ?? 0), 0) /
-          plans.length
+        ? plans.reduce(
+            (sum, plan) => sum + (plan.estimatedSavings?.toDecimal() ?? 0),
+            0,
+          ) / plans.length
         : 0,
   };
 
@@ -41,93 +91,136 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* ─── Header ─── */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+          activeOpacity={0.6}
+        >
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Historial</Text>
-        <View style={styles.headerRight} />
+        <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {!hasHistory ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="time-outline" size={64} color={colors.textTertiary} />
-            <Text style={styles.emptyTitle}>Sin historial</Text>
-            <Text style={styles.emptyText}>
-              Aquí aparecerán tus listas anteriores y los planes generados.
+          /* ─── Empty State ─── */
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIconRing}>
+              <Ionicons
+                name="time-outline"
+                size={48}
+                color={colors.primary}
+              />
+            </View>
+            <Text style={styles.emptyTitle}>Sin historial aún</Text>
+            <Text style={styles.emptyDescription}>
+              Aquí aparecerán tus listas anteriores y los planes de optimización generados.
             </Text>
             <TouchableOpacity
-              style={styles.emptyButton}
+              style={styles.emptyCTA}
+              activeOpacity={0.7}
               onPress={() => router.push('/(shopping)/create-list')}
             >
-              <Text style={styles.emptyButtonText}>Crear primera lista</Text>
+              <Ionicons name="add-circle-outline" size={20} color={colors.textInverse} />
+              <Text style={styles.emptyCTAText}>Crear primera lista</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            {/* Statistics */}
-            <Text style={styles.sectionTitle}>Resumen</Text>
+            {/* ─── Stats Summary ─── */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Resumen</Text>
+            </View>
             <View style={styles.statsGrid}>
-              <StatCard
-                icon="list"
-                value={stats.totalLists}
-                label="Listas"
-                color={colors.primary}
-              />
-              <StatCard
-                icon="map"
-                value={stats.totalPlans}
-                label="Planes"
-                color={colors.secondary}
-              />
-              <StatCard
-                icon="wallet"
-                value={`$${stats.totalSaved.toFixed(0)}`}
-                label="Ahorrado"
-                color={colors.savings}
-              />
-              <StatCard
-                icon="trending-down"
-                value={`$${stats.averageSavings.toFixed(0)}`}
-                label="Promedio"
-                color={colors.warning}
-              />
+              <View style={styles.statsRow}>
+                <StatCard
+                  icon="list-outline"
+                  value={stats.totalLists}
+                  label="Listas"
+                  color={colors.primary}
+                />
+                <StatCard
+                  icon="map-outline"
+                  value={stats.totalPlans}
+                  label="Planes"
+                  color={colors.secondary}
+                />
+              </View>
+              <View style={styles.statsRow}>
+                <StatCard
+                  icon="wallet-outline"
+                  value={formatCurrency(stats.totalSaved)}
+                  label="Total ahorrado"
+                  color={colors.savings}
+                />
+                <StatCard
+                  icon="trending-down-outline"
+                  value={formatCurrency(stats.averageSavings)}
+                  label="Ahorro promedio"
+                  color={colors.warning}
+                />
+              </View>
             </View>
 
-            {/* Past Lists */}
+            {/* ─── Lists Section ─── */}
             {lists.length > 0 && (
               <>
-                <Text style={styles.sectionTitle}>Listas anteriores</Text>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Listas</Text>
+                  <Text style={styles.sectionCount}>{lists.length}</Text>
+                </View>
                 {lists.map((list) => {
                   const statusInfo = STATUS_CONFIG[list.status];
                   return (
                     <TouchableOpacity
                       key={list.id}
-                      style={styles.historyCard}
-                      onPress={() => {
-                        router.push('/(shopping)/list-detail');
-                      }}
+                      style={styles.card}
+                      activeOpacity={0.6}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/(shopping)/list-detail',
+                          params: { id: list.id },
+                        })
+                      }
                     >
-                      <View style={styles.historyCardHeader}>
-                        <View style={styles.historyCardIcon}>
-                          <Ionicons name="list" size={18} color={colors.primary} />
-                        </View>
-                        <View style={styles.historyCardInfo}>
-                          <Text style={styles.historyCardTitle} numberOfLines={1}>
-                            {list.title}
+                      <View style={styles.cardIcon}>
+                        <Ionicons
+                          name="document-text-outline"
+                          size={20}
+                          color={colors.primary}
+                        />
+                      </View>
+                      <View style={styles.cardBody}>
+                        <Text style={styles.cardTitle} numberOfLines={1}>
+                          {list.title}
+                        </Text>
+                        <Text style={styles.cardMeta}>
+                          {list.itemCount} producto
+                          {list.itemCount !== 1 ? 's' : ''}{' '}
+                          <Text style={styles.metaDot}>·</Text>{' '}
+                          <Text style={{ color: statusInfo.color }}>
+                            {statusInfo.label}
                           </Text>
-                          <Text style={styles.historyCardMeta}>
-                            {list.itemCount} producto{list.itemCount !== 1 ? 's' : ''} ·{' '}
-                            <Text style={{ color: statusInfo.color }}>{statusInfo.label}</Text>
-                          </Text>
-                        </View>
-                        <Text style={styles.historyCardDate}>
+                        </Text>
+                      </View>
+                      <View style={styles.cardRight}>
+                        <Text style={styles.cardDate}>
                           {list.createdAt.toLocaleDateString('es-MX', {
                             month: 'short',
                             day: 'numeric',
                           })}
                         </Text>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={16}
+                          color={colors.textTertiary}
+                        />
                       </View>
                     </TouchableOpacity>
                   );
@@ -135,55 +228,80 @@ export default function HistoryScreen() {
               </>
             )}
 
-            {/* Past Plans */}
+            {/* ─── Plans Section ─── */}
             {plans.length > 0 && (
               <>
-                <Text style={styles.sectionTitle}>Planes anteriores</Text>
-                {plans.map((plan) => (
-                  <TouchableOpacity
-                    key={plan.id}
-                    style={styles.historyCard}
-                    onPress={() => router.push('/(shopping)/plan-results')}
-                  >
-                    <View style={styles.historyCardHeader}>
-                      <View style={styles.historyCardIcon}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Planes</Text>
+                  <Text style={styles.sectionCount}>{plans.length}</Text>
+                </View>
+                {plans.map((plan) => {
+                  const modeInfo =
+                    PLAN_MODE_LABELS[plan.mode] ?? PLAN_MODE_LABELS.BALANCED;
+                  const hasSavings =
+                    plan.estimatedSavings &&
+                    plan.estimatedSavings.toDecimal() > 0;
+
+                  return (
+                    <TouchableOpacity
+                      key={plan.id}
+                      style={styles.card}
+                      activeOpacity={0.6}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/(shopping)/plan-results',
+                          params: { id: plan.id },
+                        })
+                      }
+                    >
+                      <View style={styles.cardIcon}>
                         <Ionicons
-                          name={
-                            plan.mode === 'MAXIMUM_SAVINGS'
-                              ? 'trending-down'
-                              : plan.mode === 'BALANCED'
-                                ? 'scale'
-                                : 'speedometer'
-                          }
-                          size={18}
-                          color={colors.primary}
+                          name={modeInfo.icon as keyof typeof Ionicons.glyphMap}
+                          size={20}
+                          color={colors.secondary}
                         />
                       </View>
-                      <View style={styles.historyCardInfo}>
-                        <Text style={styles.historyCardTitle} numberOfLines={1}>
-                          {plan.mode === 'MAXIMUM_SAVINGS'
-                            ? 'Máximo ahorro'
-                            : plan.mode === 'BALANCED'
-                              ? 'Equilibrado'
-                              : 'Máxima comodidad'}
+                      <View style={styles.cardBody}>
+                        <Text style={styles.cardTitle} numberOfLines={1}>
+                          {modeInfo.label}
                         </Text>
-                        <Text style={styles.historyCardMeta}>
-                          ${plan.effectiveTotalCost.toDecimal().toFixed(2)} · {plan.numberOfStores}{' '}
-                          tienda{plan.numberOfStores > 1 ? 's' : ''} · {plan.totalTimeMinutes} min
+                        <Text style={styles.cardMeta}>
+                          {formatCurrency(plan.effectiveTotalCost.toDecimal())}{' '}
+                          <Text style={styles.metaDot}>·</Text>{' '}
+                          {plan.numberOfStores} tienda
+                          {plan.numberOfStores > 1 ? 's' : ''}{' '}
+                          <Text style={styles.metaDot}>·</Text>{' '}
+                          {plan.totalTimeMinutes} min
                         </Text>
                       </View>
-                      {plan.estimatedSavings && plan.estimatedSavings.toDecimal() > 0 && (
-                        <View style={styles.savingsBadge}>
-                          <Text style={styles.savingsBadgeText}>
-                            -${plan.estimatedSavings.toDecimal().toFixed(0)}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
+                      <View style={styles.cardRight}>
+                        {hasSavings && (
+                          <View style={styles.savingsBadge}>
+                            <Ionicons
+                              name="arrow-down"
+                              size={12}
+                              color={colors.savings}
+                            />
+                            <Text style={styles.savingsBadgeText}>
+                              {formatCurrency(
+                                plan.estimatedSavings!.toDecimal(),
+                              )}
+                            </Text>
+                          </View>
+                        )}
+                        <Ionicons
+                          name="chevron-forward"
+                          size={16}
+                          color={colors.textTertiary}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </>
             )}
+
+            <View style={styles.bottomSpacer} />
           </>
         )}
       </ScrollView>
@@ -191,7 +309,7 @@ export default function HistoryScreen() {
   );
 }
 
-// ─── Stat Card Component ───
+// ─── Stat Card ───
 
 function StatCard({
   icon,
@@ -206,20 +324,30 @@ function StatCard({
 }) {
   return (
     <View style={styles.statCard}>
-      <View style={[styles.statIcon, { backgroundColor: color + '15' }]}>
-        <Ionicons name={icon as any} size={20} color={color} />
+      <View style={[styles.statIconWrap, { backgroundColor: color + '14' }]}>
+        <Ionicons
+          name={icon as keyof typeof Ionicons.glyphMap}
+          size={18}
+          color={color}
+        />
       </View>
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
+      <Text style={[styles.statValue, { color }]} numberOfLines={1}>
+        {value}
+      </Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
 }
+
+// ─── Styles ───
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
+
+  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -228,132 +356,197 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.divider,
   },
-  backButton: { padding: spacing.xs },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceVariant,
+  },
   headerTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
-  headerRight: { width: 32 },
-  content: {
+  headerSpacer: {
+    width: 36,
+  },
+
+  // Scroll
+  scrollContent: {
     padding: spacing.lg,
     paddingBottom: 100,
   },
-  emptyState: {
+
+  // Sections
+  sectionHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.xxxxl,
-  },
-  emptyTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    marginTop: spacing.lg,
-  },
-  emptyText: {
-    fontSize: typography.fontSize.md,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: spacing.sm,
-    paddingHorizontal: spacing.xxl,
-  },
-  emptyButton: {
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
     marginTop: spacing.xl,
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-  },
-  emptyButtonText: {
-    color: colors.white,
-    fontWeight: '600',
   },
   sectionTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
-    marginBottom: spacing.md,
-    marginTop: spacing.lg,
   },
-  // Stats
+  sectionCount: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.textTertiary,
+    backgroundColor: colors.surfaceVariant,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    overflow: 'hidden',
+  },
+
+  // Stats Grid
   statsGrid: {
+    gap: spacing.sm,
+  },
+  statsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   statCard: {
-    width: '48%',
+    flex: 1,
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     alignItems: 'center',
-    ...shadows.sm,
+    ...shadows.xs,
   },
-  statIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  statIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   statValue: {
-    fontSize: typography.fontSize.xxl,
-    fontWeight: '700',
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.bold,
   },
   statLabel: {
-    fontSize: typography.fontSize.sm,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.medium,
     color: colors.textSecondary,
     marginTop: 2,
   },
-  // History cards
-  historyCard: {
+
+  // History Cards
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.sm,
-    ...shadows.sm,
+    ...shadows.xs,
   },
-  historyCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  historyCardIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  cardIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.md,
     backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: spacing.md,
   },
-  historyCardInfo: {
+  cardBody: {
     flex: 1,
+    marginRight: spacing.sm,
   },
-  historyCardTitle: {
+  cardTitle: {
     fontSize: typography.fontSize.md,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
-  historyCardMeta: {
+  cardMeta: {
     fontSize: typography.fontSize.sm,
     color: colors.textSecondary,
     marginTop: 2,
   },
-  historyCardDate: {
+  metaDot: {
+    color: colors.textTertiary,
+  },
+  cardRight: {
+    alignItems: 'flex-end',
+    gap: spacing.xs,
+  },
+  cardDate: {
     fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.medium,
     color: colors.textTertiary,
   },
   savingsBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.savingsLight,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
+    paddingVertical: spacing.xs,
     borderRadius: borderRadius.sm,
+    gap: 2,
   },
   savingsBadgeText: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: '600',
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
     color: colors.savings,
+  },
+
+  // Empty State
+  emptyContainer: {
+    alignItems: 'center',
+    paddingTop: spacing.xxxxl + spacing.xxxl,
+    paddingHorizontal: spacing.xxl,
+  },
+  emptyIconRing: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xxl,
+  },
+  emptyTitle: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  emptyDescription: {
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.regular,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: typography.fontSize.md * typography.lineHeight.relaxed,
+  },
+  emptyCTA: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md + 2,
+    borderRadius: borderRadius.md,
+    marginTop: spacing.xxl,
+    gap: spacing.sm,
+    ...shadows.sm,
+  },
+  emptyCTAText: {
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.textInverse,
+  },
+
+  // Bottom Spacer
+  bottomSpacer: {
+    height: spacing.xxl,
   },
 });

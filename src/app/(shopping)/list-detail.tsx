@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
   backButton: { padding: spacing.xs },
   headerTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     flex: 1,
     textAlign: 'center',
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: typography.fontSize.xs,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   metaText: {
     fontSize: typography.fontSize.sm,
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     marginTop: spacing.lg,
   },
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   },
   emptyButtonText: {
     color: colors.white,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   emptyItems: {
     alignItems: 'center',
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
   },
   emptyItemsTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     marginTop: spacing.lg,
   },
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     flex: 1,
   },
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
   },
   brandBadgeText: {
     fontSize: typography.fontSize.xs,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.primary,
   },
   itemMeta: {
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
   },
   matchText: {
     fontSize: typography.fontSize.xs,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   itemExpanded: {
     paddingHorizontal: spacing.lg,
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: typography.fontSize.sm,
     color: colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
     marginTop: 2,
   },
   notesContainer: {
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
   },
   priorityChipTextActive: {
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   // Bottom bar
   bottomBar: {
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
   optimizeButtonText: {
     color: colors.white,
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   // Modal styles
   modalOverlay: {
@@ -706,18 +706,18 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
   modalProductName: {
     fontSize: typography.fontSize.lg,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
     color: colors.primary,
     marginBottom: spacing.lg,
   },
   modalInputLabel: {
     fontSize: typography.fontSize.sm,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
   modalCancelText: {
     fontSize: typography.fontSize.md,
     color: colors.textPrimary,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   modalSaveButton: {
     flex: 1,
@@ -764,6 +764,6 @@ const styles = StyleSheet.create({
   modalSaveText: {
     fontSize: typography.fontSize.md,
     color: colors.white,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
 });

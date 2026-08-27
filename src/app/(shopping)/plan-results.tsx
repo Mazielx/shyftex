@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { colors, spacing, borderRadius, shadows, typography } from '../../config/theme';
+import { colors, spacing, borderRadius, shadows, typography, formatCurrency } from '../../config/theme';
 import { useOptimizationStore, useMissionStore } from '../../stores/AppStore';
 import { ShoppingPlan, PlanConfidence } from '../../domain/entities/ShoppingPlan';
 
@@ -64,7 +64,7 @@ export default function PlanResultsScreen() {
             <View>
               <Text style={styles.savingsLabel}>Ahorro estimado</Text>
               <Text style={styles.savingsAmount}>
-                ${plan.estimatedSavings.toDecimal().toFixed(2)}
+                {formatCurrency(plan.estimatedSavings.toDecimal())}
               </Text>
             </View>
           </View>
@@ -74,17 +74,17 @@ export default function PlanResultsScreen() {
         <View style={styles.summaryCard}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Productos</Text>
-            <Text style={styles.summaryValue}>${plan.totalProductCost.toDecimal().toFixed(2)}</Text>
+            <Text style={styles.summaryValue}>{formatCurrency(plan.totalProductCost.toDecimal())}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Transporte</Text>
             <Text style={styles.summaryValue}>
-              ${plan.totalTransportCost.toDecimal().toFixed(2)}
+              {formatCurrency(plan.totalTransportCost.toDecimal())}
             </Text>
           </View>
           <View style={[styles.summaryRow, styles.summaryTotal]}>
             <Text style={styles.totalLabel}>Total estimado</Text>
-            <Text style={styles.totalValue}>${plan.effectiveTotalCost.toDecimal().toFixed(2)}</Text>
+            <Text style={styles.totalValue}>{formatCurrency(plan.effectiveTotalCost.toDecimal())}</Text>
           </View>
         </View>
 
@@ -125,7 +125,7 @@ export default function PlanResultsScreen() {
                       {stop.retailerName} · {stop.address}
                     </Text>
                   </View>
-                  <Text style={styles.stopCost}>${stop.productCost.toDecimal().toFixed(2)}</Text>
+                  <Text style={styles.stopCost}>{formatCurrency(stop.productCost.toDecimal())}</Text>
                 </View>
 
                 <View style={styles.stopItems}>
@@ -141,7 +141,7 @@ export default function PlanResultsScreen() {
                       </Text>
                       <Text style={styles.stopItemQty}>x{item.quantity}</Text>
                       <Text style={styles.stopItemPrice}>
-                        ${item.effectivePrice.toDecimal().toFixed(2)}
+                        {formatCurrency(item.effectivePrice.toDecimal())}
                       </Text>
                     </View>
                   ))}
@@ -245,7 +245,7 @@ export default function PlanResultsScreen() {
                   <View style={styles.otherPlanInfo}>
                     <Text style={styles.otherPlanMode}>{otherPlan.mode.replace('_', ' ')}</Text>
                     <Text style={styles.otherPlanCost}>
-                      ${otherPlan.effectiveTotalCost.toDecimal().toFixed(2)} total
+                      {formatCurrency(otherPlan.effectiveTotalCost.toDecimal())} total
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   backButton: { padding: spacing.xs },
   headerTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
   headerRight: { width: 32 },
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     marginTop: spacing.lg,
   },
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
   },
   emptyButtonText: {
     color: colors.white,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   savingsHeader: {
     backgroundColor: colors.savings,
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   },
   savingsAmount: {
     fontSize: typography.fontSize.xxxl,
-    fontWeight: '700',
+    fontWeight: typography.fontWeight.bold,
     color: colors.white,
   },
   summaryCard: {
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: typography.fontSize.md,
     color: colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
   },
   summaryTotal: {
     borderTopWidth: 1,
@@ -413,12 +413,12 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
   totalValue: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '700',
+    fontWeight: typography.fontWeight.bold,
     color: colors.primary,
   },
   confidenceBar: {
@@ -435,14 +435,14 @@ const styles = StyleSheet.create({
   },
   confidenceText: {
     fontSize: typography.fontSize.sm,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
   },
   section: {
     marginBottom: spacing.xl,
   },
   sectionTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
   },
   metricValue: {
     fontSize: typography.fontSize.lg,
-    fontWeight: '700',
+    fontWeight: typography.fontWeight.bold,
     color: colors.textPrimary,
   },
   metricLabel: {
@@ -492,14 +492,14 @@ const styles = StyleSheet.create({
   stopNumberText: {
     color: colors.white,
     fontSize: typography.fontSize.sm,
-    fontWeight: '700',
+    fontWeight: typography.fontWeight.bold,
   },
   stopInfo: {
     flex: 1,
   },
   stopStoreName: {
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
   stopAddress: {
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
   },
   stopCost: {
     fontSize: typography.fontSize.lg,
-    fontWeight: '700',
+    fontWeight: typography.fontWeight.bold,
     color: colors.primary,
   },
   stopItems: {
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
   },
   stopItemPrice: {
     fontSize: typography.fontSize.sm,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
     color: colors.textPrimary,
   },
   promosRow: {
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
   promoText: {
     fontSize: typography.fontSize.xs,
     color: colors.savings,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
   },
   explanationCard: {
     flexDirection: 'row',
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
   },
   otherPlanMode: {
     fontSize: typography.fontSize.md,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     textTransform: 'capitalize',
   },
@@ -650,6 +650,6 @@ const styles = StyleSheet.create({
   startButtonText: {
     color: colors.white,
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
 });

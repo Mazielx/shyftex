@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -20,19 +21,29 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [nameFocused, setNameFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const { register, isLoading, error } = useAuthStore();
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Por favor completa todos los campos');
+      Alert.alert('Error', 'Completa todos los campos');
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+      Alert.alert('Error', 'La contrasena debe tener al menos 6 caracteres');
       return;
     }
-    await register(email, password, name);
-    router.replace('/(tabs)');
+    try {
+      await register(email.trim(), password, name.trim());
+      const { isAuthenticated } = useAuthStore.getState();
+      if (isAuthenticated) {
+        router.replace('/(tabs)');
+      }
+    } catch {
+      // Error handled by store
+    }
   };
 
   return (
@@ -42,9 +53,13 @@ export default function RegisterScreen() {
         style={styles.keyboardView}
       >
         <View style={styles.content}>
-          {/* Back button */}
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+          {/* Back */}
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => router.back()}
+            activeOpacity={0.6}
+          >
+            <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
 
           {/* Header */}
@@ -55,69 +70,99 @@ export default function RegisterScreen() {
 
           {/* Form */}
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Ionicons name="person-outline" size={20} color={colors.textTertiary} />
+            <View style={[styles.inputRow, nameFocused && styles.inputRowFocused]}>
+              <Ionicons
+                name="person-outline"
+                size={18}
+                color={nameFocused ? colors.primary : colors.textTertiary}
+              />
               <TextInput
-                style={styles.input}
-                placeholder="Nombre"
+                style={styles.inputField}
+                placeholder="Tu nombre"
                 placeholderTextColor={colors.textTertiary}
                 value={name}
                 onChangeText={setName}
+                onFocus={() => setNameFocused(true)}
+                onBlur={() => setNameFocused(false)}
                 autoCapitalize="words"
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color={colors.textTertiary} />
+            <View style={[styles.inputRow, emailFocused && styles.inputRowFocused]}>
+              <Ionicons
+                name="mail-outline"
+                size={18}
+                color={emailFocused ? colors.primary : colors.textTertiary}
+              />
               <TextInput
-                style={styles.input}
-                placeholder="Email"
+                style={styles.inputField}
+                placeholder="tu@email.com"
                 placeholderTextColor={colors.textTertiary}
                 value={email}
                 onChangeText={setEmail}
+                onFocus={() => setEmailFocused(true)}
+                onBlur={() => setEmailFocused(false)}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color={colors.textTertiary} />
+            <View style={[styles.inputRow, passwordFocused && styles.inputRowFocused]}>
+              <Ionicons
+                name="lock-closed-outline"
+                size={18}
+                color={passwordFocused ? colors.primary : colors.textTertiary}
+              />
               <TextInput
-                style={styles.input}
-                placeholder="Contraseña (mínimo 6 caracteres)"
+                style={styles.inputField}
+                placeholder="Minimo 6 caracteres"
                 placeholderTextColor={colors.textTertiary}
                 value={password}
                 onChangeText={setPassword}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
                 secureTextEntry={!showPassword}
               />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
                 <Ionicons
-                  name={showPassword ? 'eye-off' : 'eye'}
-                  size={20}
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={18}
                   color={colors.textTertiary}
                 />
               </TouchableOpacity>
             </View>
 
-            {error && <Text style={styles.errorText}>{error}</Text>}
+            {error ? (
+              <View style={styles.errorBox}>
+                <Ionicons name="alert-circle" size={16} color={colors.error} />
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : null}
 
             <TouchableOpacity
-              style={[styles.registerButton, isLoading && styles.registerButtonDisabled]}
+              style={[styles.registerBtn, isLoading && styles.registerBtnDisabled]}
               onPress={handleRegister}
               disabled={isLoading}
               activeOpacity={0.8}
             >
-              <Text style={styles.registerButtonText}>
-                {isLoading ? 'Creando cuenta...' : 'Crear cuenta'}
-              </Text>
+              {isLoading ? (
+                <ActivityIndicator color={colors.white} size="small" />
+              ) : (
+                <Text style={styles.registerBtnText}>Crear cuenta</Text>
+              )}
             </TouchableOpacity>
           </View>
 
-          {/* Login */}
-          <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>¿Ya tienes cuenta? </Text>
+          {/* Login link */}
+          <View style={styles.footer}>
             <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.loginLink}>Inicia sesión</Text>
+              <Text style={styles.footerText}>
+                Ya tienes cuenta?{' '}
+                <Text style={styles.footerLink}>Inicia sesion</Text>
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -136,79 +181,95 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.xl,
+    paddingHorizontal: spacing.xxl + 4,
+    paddingTop: spacing.lg,
   },
-  backButton: {
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.surfaceHover,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.xl,
-    padding: spacing.xs,
-    alignSelf: 'flex-start',
   },
   header: {
     marginBottom: spacing.xxxl,
   },
   title: {
     fontSize: typography.fontSize.xxxl,
-    fontWeight: '700',
+    fontWeight: typography.fontWeight.bold,
     color: colors.textPrimary,
   },
   subtitle: {
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+    lineHeight: typography.fontSize.md * typography.lineHeight.relaxed,
   },
   form: {
     marginBottom: spacing.xxl,
   },
-  inputContainer: {
+  inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md + 2,
     marginBottom: spacing.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
     gap: spacing.md,
   },
-  input: {
+  inputRowFocused: {
+    borderColor: colors.primary,
+  },
+  inputField: {
     flex: 1,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     color: colors.textPrimary,
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.errorLight,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
   },
   errorText: {
     fontSize: typography.fontSize.sm,
     color: colors.error,
-    marginBottom: spacing.md,
+    flex: 1,
   },
-  registerButton: {
+  registerBtn: {
     backgroundColor: colors.primary,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     paddingVertical: spacing.lg,
     alignItems: 'center',
-    marginTop: spacing.md,
-    ...shadows.md,
+    marginTop: spacing.sm,
+    ...shadows.sm,
   },
-  registerButtonDisabled: {
-    opacity: 0.7,
+  registerBtnDisabled: {
+    opacity: 0.6,
   },
-  registerButtonText: {
+  registerBtnText: {
     color: colors.white,
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
-  loginContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+  footer: {
+    alignItems: 'center',
   },
-  loginText: {
+  footerText: {
     fontSize: typography.fontSize.md,
     color: colors.textSecondary,
   },
-  loginLink: {
-    fontSize: typography.fontSize.md,
+  footerLink: {
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
 });

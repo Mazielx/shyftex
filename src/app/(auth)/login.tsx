@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -19,15 +20,35 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const { login, isLoading, error } = useAuthStore();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Por favor ingresa email y contraseña');
+      Alert.alert('Error', 'Por favor ingresa email y contrasena');
       return;
     }
-    await login(email, password);
-    router.replace('/(tabs)');
+    try {
+      await login(email.trim(), password);
+      // Only navigate if login succeeded (isAuthenticated becomes true)
+      const { isAuthenticated } = useAuthStore.getState();
+      if (isAuthenticated) {
+        router.replace('/(tabs)');
+      }
+    } catch {
+      // Error is handled by the store
+    }
+  };
+
+  const handleDemo = async () => {
+    try {
+      await login('demo@shopping.com', 'demo');
+      router.replace('/(tabs)');
+    } catch {
+      // Fallback: navigate anyway for demo
+      router.replace('/(tabs)');
+    }
   };
 
   return (
@@ -37,85 +58,110 @@ export default function LoginScreen() {
         style={styles.keyboardView}
       >
         <View style={styles.content}>
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-            <View style={styles.logo}>
-              <Ionicons name="cart" size={40} color={colors.white} />
+          {/* Brand Header */}
+          <View style={styles.brandSection}>
+            <View style={styles.logoMark}>
+              <Ionicons name="cart" size={32} color={colors.white} />
             </View>
-            <Text style={styles.appName}>Shopping Optimizer</Text>
-            <Text style={styles.appTagline}>Tu lista. Los mejores precios.</Text>
+            <Text style={styles.brandName}>SHYFTEX</Text>
+            <Text style={styles.brandTagline}>Compra inteligente, precios reales</Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color={colors.textTertiary} />
+            <Text style={styles.formTitle}>Iniciar sesion</Text>
+
+            <View
+              style={[styles.inputRow, emailFocused && styles.inputRowFocused]}
+            >
+              <Ionicons
+                name="mail-outline"
+                size={18}
+                color={emailFocused ? colors.primary : colors.textTertiary}
+              />
               <TextInput
-                style={styles.input}
-                placeholder="Email"
+                style={styles.inputField}
+                placeholder="tu@email.com"
                 placeholderTextColor={colors.textTertiary}
                 value={email}
                 onChangeText={setEmail}
+                onFocus={() => setEmailFocused(true)}
+                onBlur={() => setEmailFocused(false)}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color={colors.textTertiary} />
+            <View
+              style={[styles.inputRow, passwordFocused && styles.inputRowFocused]}
+            >
+              <Ionicons
+                name="lock-closed-outline"
+                size={18}
+                color={passwordFocused ? colors.primary : colors.textTertiary}
+              />
               <TextInput
-                style={styles.input}
-                placeholder="Contraseña"
+                style={styles.inputField}
+                placeholder="Contrasena"
                 placeholderTextColor={colors.textTertiary}
                 value={password}
                 onChangeText={setPassword}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
                 secureTextEntry={!showPassword}
               />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
                 <Ionicons
-                  name={showPassword ? 'eye-off' : 'eye'}
-                  size={20}
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={18}
                   color={colors.textTertiary}
                 />
               </TouchableOpacity>
             </View>
 
-            {error && <Text style={styles.errorText}>{error}</Text>}
-
-            <TouchableOpacity style={styles.forgotPassword} onPress={() => {}}>
-              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
-            </TouchableOpacity>
+            {error ? (
+              <View style={styles.errorBox}>
+                <Ionicons name="alert-circle" size={16} color={colors.error} />
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : null}
 
             <TouchableOpacity
-              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+              style={[styles.loginBtn, isLoading && styles.loginBtnDisabled]}
               onPress={handleLogin}
               disabled={isLoading}
               activeOpacity={0.8}
             >
-              <Text style={styles.loginButtonText}>
-                {isLoading ? 'Ingresando...' : 'Iniciar sesión'}
+              {isLoading ? (
+                <ActivityIndicator color={colors.white} size="small" />
+              ) : (
+                <Text style={styles.loginBtnText}>Continuar</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
+              <Text style={styles.footerText}>
+                No tienes cuenta?{' '}
+                <Text style={styles.footerLink}>Registrate</Text>
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* Register */}
-          <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>¿No tienes cuenta? </Text>
-            <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-              <Text style={styles.registerLink}>Regístrate</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Demo mode */}
+          {/* Demo */}
           <TouchableOpacity
-            style={styles.demoButton}
-            onPress={() => {
-              login('demo@shopping.com', 'demo');
-              router.replace('/(tabs)');
-            }}
+            style={styles.demoBtn}
+            onPress={handleDemo}
+            activeOpacity={0.7}
           >
-            <Ionicons name="play-circle" size={18} color={colors.secondary} />
-            <Text style={styles.demoButtonText}>Entrar en modo demo</Text>
+            <Ionicons name="play-circle-outline" size={16} color={colors.textSecondary} />
+            <Text style={styles.demoBtnText}>Probar sin cuenta</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -134,106 +180,121 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: spacing.xxl,
+    paddingHorizontal: spacing.xxl + 4,
   },
-  logoContainer: {
+  // Brand
+  brandSection: {
     alignItems: 'center',
-    marginBottom: spacing.xxxxl,
+    marginBottom: spacing.xxxxl + 8,
   },
-  logo: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
+  logoMark: {
+    width: 64,
+    height: 64,
+    borderRadius: borderRadius.xl,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
-    ...shadows.lg,
+    ...shadows.md,
   },
-  appName: {
-    fontSize: typography.fontSize.xxxl,
-    fontWeight: '700',
+  brandName: {
+    fontSize: typography.fontSize.xxl,
+    fontWeight: typography.fontWeight.bold,
     color: colors.textPrimary,
+    letterSpacing: 2,
   },
-  appTagline: {
-    fontSize: typography.fontSize.lg,
+  brandTagline: {
+    fontSize: typography.fontSize.md,
     color: colors.textSecondary,
     marginTop: spacing.xs,
   },
+  // Form
   form: {
     marginBottom: spacing.xxl,
   },
-  inputContainer: {
+  formTitle: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xl,
+  },
+  inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md + 2,
     marginBottom: spacing.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
     gap: spacing.md,
   },
-  input: {
+  inputRowFocused: {
+    borderColor: colors.primary,
+  },
+  inputField: {
     flex: 1,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     color: colors.textPrimary,
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.errorLight,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
   },
   errorText: {
     fontSize: typography.fontSize.sm,
     color: colors.error,
-    marginBottom: spacing.md,
+    flex: 1,
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: spacing.xl,
-  },
-  forgotPasswordText: {
-    fontSize: typography.fontSize.sm,
-    color: colors.primary,
-  },
-  loginButton: {
+  loginBtn: {
     backgroundColor: colors.primary,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     paddingVertical: spacing.lg,
     alignItems: 'center',
-    ...shadows.md,
+    marginTop: spacing.sm,
+    ...shadows.sm,
   },
-  loginButtonDisabled: {
-    opacity: 0.7,
+  loginBtnDisabled: {
+    opacity: 0.6,
   },
-  loginButtonText: {
+  loginBtnText: {
     color: colors.white,
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
-  registerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+  // Footer
+  footer: {
+    alignItems: 'center',
     marginBottom: spacing.xxl,
   },
-  registerText: {
+  footerText: {
     fontSize: typography.fontSize.md,
     color: colors.textSecondary,
   },
-  registerLink: {
-    fontSize: typography.fontSize.md,
+  footerLink: {
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
-  demoButton: {
+  // Demo
+  demoBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    padding: spacing.md,
-    backgroundColor: colors.infoLight,
-    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.surfaceHover,
   },
-  demoButtonText: {
-    fontSize: typography.fontSize.md,
-    color: colors.secondary,
-    fontWeight: '500',
+  demoBtnText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+    fontWeight: typography.fontWeight.medium,
   },
 });

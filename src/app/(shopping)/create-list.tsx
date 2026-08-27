@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: typography.fontSize.xl,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
   },
   headerRight: {
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   },
   tipsTitle: {
     fontSize: typography.fontSize.md,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   },
   exampleTitle: {
     fontSize: typography.fontSize.md,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.info,
     marginBottom: spacing.sm,
   },
@@ -271,14 +271,14 @@ const styles = StyleSheet.create({
   useExampleText: {
     fontSize: typography.fontSize.sm,
     color: colors.info,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
   methodsSection: {
     marginBottom: spacing.xl,
   },
   methodsTitle: {
     fontSize: typography.fontSize.md,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.xs,
     color: colors.primary,
     marginTop: spacing.xs,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
   },
   methodLabelDisabled: {
     color: colors.textTertiary,
@@ -335,6 +335,6 @@ const styles = StyleSheet.create({
   parseButtonText: {
     color: colors.white,
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semibold,
   },
 });
