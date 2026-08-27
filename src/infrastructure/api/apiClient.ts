@@ -8,6 +8,12 @@
 import * as SecureStore from 'expo-secure-store';
 
 // ─── Configuration ───
+//
+// Set EXPO_PUBLIC_API_URL in your .env file:
+//   Development:  http://localhost:4000
+//   Production:   https://shyftex-api.onrender.com  (or your actual deployed URL)
+//
+// The URL is bundled at build time by Expo.
 
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000';

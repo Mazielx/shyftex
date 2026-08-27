@@ -6,7 +6,7 @@ WORKDIR /app
 COPY server/package*.json ./
 COPY server/prisma ./prisma
 
-# Install all dependencies (including dev for prisma generate)
+# Install all dependencies (including dev for prisma generate + tsc)
 RUN npm ci
 
 # Copy config files
@@ -17,7 +17,8 @@ COPY server/prisma.config.ts ./
 COPY server/src ./src
 
 # Generate Prisma client and compile TypeScript
-RUN npx prisma generate
+# DATABASE_URL is needed by prisma.config.ts but only used at runtime for migrations
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
 RUN npx tsc
 
 # Production stage
@@ -27,9 +28,7 @@ RUN apk add --no-cache wget
 
 WORKDIR /app
 
-# Create non-root user
-RUN addgroup -S shyftex && adduser -S shyftex -G shyftex
-
+# Copy everything from base (smaller image = less important than working)
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/dist ./dist
 COPY --from=base /app/prisma ./prisma
@@ -38,11 +37,6 @@ COPY --from=base /app/package*.json ./
 
 # Copy app.html for the web demo
 COPY app.html ./app.html
-
-# Set ownership
-RUN chown -R shyftex:shyftex /app
-
-USER shyftex
 
 ENV NODE_ENV=production
 ENV PORT=4000

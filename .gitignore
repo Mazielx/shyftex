@@ -62,9 +62,13 @@ build/
 *.db
 *.db-journal
 prisma/dev.db
+server/dev.db
 
 # Secrets (never commit)
 *.secret
 *.key
 secrets/
 server/src/generated/
+
+# Backend build
+server/dist/

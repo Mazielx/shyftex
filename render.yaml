@@ -1,0 +1,37 @@
+# Render Blueprint — SHYFTEX Backend
+# This file defines the backend service and PostgreSQL database.
+# To deploy: Connect your GitHub repo at render.com/blueprints
+# and import this file. Everything provisions automatically.
+
+services:
+  # ─── Backend API ───
+  - type: web
+    name: shyftex-api
+    runtime: docker
+    dockerfilePath: server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true  # Render auto-generates a secure random secret
+      - key: DATABASE_URL
+        fromDatabase:
+          name: shyftex-db
+          property: connectionString
+      - key: PORT
+        value: 4000
+      - key: APP_URL
+        sync: false  # Set this after first deploy to your .onrender.com URL
+    # Free tier: 512 MB RAM, spins down after 15 min inactivity
+    plan: free
+    autoDeploy: true
+    branch: master
+
+  # ─── PostgreSQL Database ───
+  - type: pgsql
+    name: shyftex-db
+    plan: free  # Free tier: 90 days, then expires
+    databaseName: shopping_optimizer
+    user: shyftex

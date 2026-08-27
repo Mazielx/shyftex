@@ -1,0 +1,43 @@
+# Dependencies
+node_modules
+server/node_modules
+
+# Build output
+dist
+server/dist
+.expo
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# Environment files
+.env
+.env.*
+server/.env
+server/.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+__tests__
+*.test.ts
+*.test.tsx
+jest.config.*
+
+# Documentation
+*.md
+LICENSE
+
+# React Native (not needed in backend Docker)
+assets
+app.json
+babel.config.js
+tsconfig.json
