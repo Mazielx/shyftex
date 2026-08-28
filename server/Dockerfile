@@ -39,12 +39,14 @@ COPY --from=base /app/package*.json ./
 COPY app.html ./app.html
 
 ENV NODE_ENV=production
-ENV PORT=4000
+
+# Render inyecta PORT automáticamente. El server usa process.env.PORT ?? 4000.
+# No fijamos PORT aquí para que Render pueda asignar el suyo.
 
 EXPOSE 4000
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:4000/api/v1/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-4000}/api/v1/health || exit 1
 
 # Run migration + start server
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
