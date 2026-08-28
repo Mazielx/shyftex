@@ -47,6 +47,13 @@ sleep 10
 TUNNEL_URL=$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' /tmp/shyftex-tunnel.log | head -1)
 
 if [ -n "$TUNNEL_URL" ]; then
+  # Actualizar EXPO_PUBLIC_API_URL en el .env automáticamente
+  ENV_FILE="$(dirname "$0")/.env"
+  if [ -f "$ENV_FILE" ]; then
+    sed -i "s|^EXPO_PUBLIC_API_URL=.*|EXPO_PUBLIC_API_URL=$TUNNEL_URL|" "$ENV_FILE"
+    echo "✅ EXPO_PUBLIC_API_URL actualizado en .env"
+  fi
+
   echo ""
   echo "🎉 ¡TODO LISTO!"
   echo "============================================"
@@ -54,8 +61,7 @@ if [ -n "$TUNNEL_URL" ]; then
   echo "  Health:      $TUNNEL_URL/api/v1/health"
   echo "============================================"
   echo ""
-  echo "Para conectar la app React Native, actualiza EXPO_PUBLIC_API_URL"
-  echo "en el archivo .env con la URL pública de arriba."
+  echo "La app React Native ya apunta a esta URL (EXPO_PUBLIC_API_URL en .env)."
   echo ""
   echo "NOTA: Esta URL cambia cada vez que reinicias el túnel."
   echo "      El túnel se apaga si cierras la laptop."
