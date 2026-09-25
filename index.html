@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHYFTEX — Tu lista. Tu ruta. Tu ahorro.</title>
+<meta name="description" content="SHYFTEX compara precios entre Walmart, Soriana, Costco y más, y optimiza tu ruta de compra. Ahorra tiempo y dinero en cada despensa.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Permanent+Marker&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   SHYFTEX — GRAFFITI DESIGN SYSTEM
+   Neón amarillo #D4FF00 · Neón verde #39FF14
+   ═══════════════════════════════════════════════ */
+:root{
+  --bg:#0A0A0A;
+  --bg2:#111111;
+  --bg3:#161616;
+  --neon-yellow:#D4FF00;
+  --neon-green:#39FF14;
+  --neon-green-soft:#00FF66;
+  --pink:#FF2E88;
+  --white:#F5F5F5;
+  --gray:#9A9A9A;
+  --gray-dark:#555;
+  --font-display:'Bungee',cursive;
+  --font-tag:'Permanent Marker',cursive;
+  --font-body:'Space Grotesk',sans-serif;
+  --glow-yellow:0 0 8px rgba(212,255,0,.9),0 0 24px rgba(212,255,0,.55),0 0 64px rgba(212,255,0,.3);
+  --glow-green:0 0 8px rgba(57,255,20,.9),0 0 24px rgba(57,255,20,.55),0 0 64px rgba(57,255,20,.3);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--white);
+  font-family:var(--font-body);
+  overflow-x:hidden;
+  line-height:1.6;
+}
+/* ── Spray / noise overlay ── */
+body::before{
+  content:"";
+  position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* ── Halftone dots ── */
+.halftone{
+  background-image:radial-gradient(rgba(255,255,255,.12) 1px,transparent 1.5px);
+  background-size:14px 14px;
+}
+/* ── Nav ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 5vw;
+  background:rgba(10,10,10,.85);
+  backdrop-filter:blur(12px);
+  border-bottom:2px solid rgba(212,255,0,.25);
+}
+.logo{
+  font-family:var(--font-display);
+  font-size:1.35rem;letter-spacing:1px;
+  color:var(--neon-yellow);
+  text-shadow:var(--glow-yellow);
+  text-decoration:none;
+  transform:rotate(-2deg);
+  display:inline-block;
+}
+.logo span{color:var(--neon-green);text-shadow:var(--glow-green)}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{
+  color:var(--white);text-decoration:none;font-weight:500;font-size:.95rem;
+  transition:color .2s,text-shadow .2s;
+}
+.nav-links a:hover{color:var(--neon-yellow);text-shadow:var(--glow-yellow)}
+.nav-cta{
+  background:var(--neon-yellow);color:#000;font-weight:700;
+  padding:8px 18px;border-radius:6px;text-decoration:none;
+  font-size:.9rem;transition:transform .15s,box-shadow .15s;
+  box-shadow:0 0 16px rgba(212,255,0,.4);
+}
+.nav-cta:hover{transform:scale(1.05);box-shadow:var(--glow-yellow)}
+/* ── Hero ── */
+header{
+  min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;position:relative;padding:120px 5vw 60px;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 20%,rgba(212,255,0,.10),transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 70%,rgba(57,255,20,.10),transparent 60%),
+    var(--bg);
+}
+.hero-tag{
+  font-family:var(--font-tag);color:var(--pink);font-size:1.3rem;
+  transform:rotate(-3deg);margin-bottom:10px;
+  text-shadow:0 0 12px rgba(255,46,136,.6);
+}
+.hero-title{
+  font-family:var(--font-display);
+  font-size:clamp(3.2rem,12vw,7.5rem);
+  line-height:.95;letter-spacing:2px;
+  color:var(--neon-yellow);
+  text-shadow:var(--glow-yellow);
+  transform:rotate(-2deg);
+  margin-bottom:6px;
+}
+.hero-title .green{color:var(--neon-green);text-shadow:var(--glow-green)}
+.hero-title .outline{
+  color:transparent;
+  -webkit-text-stroke:2px var(--neon-yellow);
+  text-shadow:none;
+}
+.hero-sub{
+  font-size:clamp(1.05rem,2.5vw,1.4rem);
+  color:var(--white);max-width:640px;margin:18px auto 8px;
+  font-weight:500;
+}
+.hero-sub b{color:var(--neon-green)}
+.hero-desc{color:var(--gray);max-width:520px;margin:10px auto 34px;font-size:1rem}
+.hero-ctas{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:16px 34px;border-radius:8px;font-weight:700;font-size:1.05rem;
+  text-decoration:none;transition:transform .15s,box-shadow .15s;
+  font-family:var(--font-body);
+}
+.btn-yellow{background:var(--neon-yellow);color:#000;box-shadow:var(--glow-yellow)}
+.btn-yellow:hover{transform:scale(1.06) rotate(-1deg)}
+.btn-green{background:transparent;color:var(--neon-green);border:2px solid var(--neon-green);box-shadow:var(--glow-green)}
+.btn-green:hover{transform:scale(1.06) rotate(1deg);background:rgba(57,255,20,.08)}
+.btn svg{width:20px;height:20px}
+/* spray splat decorations */
+.splat{position:absolute;opacity:.5;pointer-events:none}
+.splat-y{top:18%;left:8%;width:90px;transform:rotate(-20deg)}
+.splat-g{bottom:22%;right:6%;width:110px;transform:rotate(15deg)}
+.splat-p{top:60%;left:4%;width:60px;transform:rotate(40deg)}
+/* ── Store strip ── */
+.stores{
+  border-top:2px dashed rgba(212,255,0,.3);
+  border-bottom:2px dashed rgba(57,255,20,.3);
+  padding:26px 5vw;text-align:center;
+  background:var(--bg2);
+}
+.stores-label{
+  font-family:var(--font-tag);color:var(--neon-green);font-size:1.1rem;
+  margin-bottom:12px;transform:rotate(-1deg);
+}
+.stores-row{display:flex;flex-wrap:wrap;justify-content:center;gap:18px 40px}
+.stores-row span{
+  font-family:var(--font-display);font-size:1.1rem;letter-spacing:1px;
+  color:var(--gray);transition:color .2s,text-shadow .2s;
+}
+.stores-row span:hover{color:var(--neon-yellow);text-shadow:var(--glow-yellow)}
+/* ── Sections ── */
+section{padding:90px 5vw}
+.section-head{text-align:center;margin-bottom:56px}
+.section-tag{
+  font-family:var(--font-tag);color:var(--pink);font-size:1.2rem;
+  transform:rotate(-2deg);display:block;margin-bottom:8px;
+}
+.section-title{
+  font-family:var(--font-display);font-size:clamp(1.8rem,5vw,2.8rem);
+  color:var(--white);letter-spacing:1px;
+}
+.section-title .y{color:var(--neon-yellow);text-shadow:var(--glow-yellow)}
+.section-title .g{color:var(--neon-green);text-shadow:var(--glow-green)}
+/* ── How it works ── */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:28px;max-width:1100px;margin:0 auto}
+.step{
+  background:var(--bg3);border:2px solid rgba(255,255,255,.08);
+  border-radius:14px;padding:34px 26px;position:relative;
+  transition:transform .2s,border-color .2s,box-shadow .2s;
+}
+.step:hover{transform:translateY(-6px) rotate(-1deg);border-color:var(--neon-yellow);box-shadow:var(--glow-yellow)}
+.step:nth-child(2):hover{border-color:var(--neon-green);box-shadow:var(--glow-green)}
+.step-num{
+  font-family:var(--font-display);font-size:3rem;
+  color:transparent;-webkit-text-stroke:2px var(--neon-yellow);
+  position:absolute;top:14px;right:20px;opacity:.8;
+}
+.step:nth-child(2) .step-num{-webkit-text-stroke:2px var(--neon-green)}
+.step:nth-child(3) .step-num{-webkit-text-stroke:2px var(--pink)}
+.step-icon{font-size:2.2rem;margin-bottom:14px;display:block}
+.step h3{font-family:var(--font-display);font-size:1.15rem;margin-bottom:10px;color:var(--white)}
+.step p{color:var(--gray);font-size:.95rem}
+/* ── Comparison proof ── */
+.proof{
+  background:var(--bg2);border-top:2px solid rgba(57,255,20,.2);border-bottom:2px solid rgba(57,255,20,.2);
+}
+.proof-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:28px;max-width:1100px;margin:0 auto}
+.proof-card{
+  background:var(--bg3);border-radius:14px;padding:30px;
+  border:2px solid rgba(255,255,255,.08);text-align:center;
+}
+.proof-card .big{
+  font-family:var(--font-display);font-size:2.6rem;color:var(--neon-green);
+  text-shadow:var(--glow-green);display:block;margin-bottom:8px;
+}
+.proof-card .big.y{color:var(--neon-yellow);text-shadow:var(--glow-yellow)}
+.proof-card p{color:var(--gray);font-size:.95rem}
+.proof-card .label{font-family:var(--font-tag);color:var(--white);font-size:1.05rem;margin-bottom:14px;display:block}
+/* ── Download ── */
+#descargar{
+  background:
+    radial-gradient(ellipse 50% 60% at 50% 0%,rgba(212,255,0,.08),transparent 60%),
+    var(--bg);
+}
+.download-box{
+  max-width:760px;margin:0 auto;text-align:center;
+  background:var(--bg3);border:2px solid rgba(212,255,0,.3);
+  border-radius:18px;padding:48px 34px;position:relative;
+  box-shadow:0 0 60px rgba(212,255,0,.08);
+}
+.download-box::before{
+  content:"FREE";position:absolute;top:-16px;right:24px;
+  background:var(--neon-yellow);color:#000;font-family:var(--font-display);
+  font-size:.85rem;padding:6px 14px;border-radius:6px;transform:rotate(6deg);
+  box-shadow:var(--glow-yellow);
+}
+.download-title{
+  font-family:var(--font-display);font-size:clamp(1.6rem,4vw,2.2rem);
+  margin-bottom:14px;color:var(--white);
+}
+.download-title .y{color:var(--neon-yellow);text-shadow:var(--glow-yellow)}
+.download-desc{color:var(--gray);margin-bottom:30px;max-width:520px;margin-left:auto;margin-right:auto}
+.download-btns{display:flex;flex-direction:column;gap:14px;align-items:center;margin-bottom:26px}
+.btn-apk{
+  background:var(--neon-yellow);color:#000;font-weight:700;
+  padding:18px 44px;border-radius:10px;text-decoration:none;font-size:1.15rem;
+  display:inline-flex;align-items:center;gap:12px;
+  box-shadow:var(--glow-yellow);transition:transform .15s;
+}
+.btn-apk:hover{transform:scale(1.05) rotate(-1deg)}
+.btn-pwa{
+  background:transparent;color:var(--neon-green);border:2px solid var(--neon-green);
+  padding:14px 34px;border-radius:10px;text-decoration:none;font-weight:700;font-size:1rem;
+  display:inline-flex;align-items:center;gap:10px;box-shadow:var(--glow-green);transition:transform .15s;
+}
+.btn-pwa:hover{transform:scale(1.05) rotate(1deg);background:rgba(57,255,20,.08)}
+.download-meta{color:var(--gray-dark);font-size:.85rem}
+.download-meta b{color:var(--gray)}
+.install-steps{
+  text-align:left;max-width:480px;margin:30px auto 0;
+  background:rgba(255,255,255,.03);border-radius:12px;padding:22px 26px;
+  border:1px dashed rgba(255,255,255,.15);
+}
+.install-steps h4{font-family:var(--font-display);font-size:.95rem;color:var(--neon-green);margin-bottom:12px}
+.install-steps ol{padding-left:20px;color:var(--gray);font-size:.9rem}
+.install-steps li{margin-bottom:8px}
+.install-steps b{color:var(--white)}
+/* ── FAQ ── */
+.faq{max-width:760px;margin:0 auto}
+details{
+  background:var(--bg3);border:2px solid rgba(255,255,255,.08);
+  border-radius:12px;margin-bottom:14px;overflow:hidden;
+  transition:border-color .2s;
+}
+details[open]{border-color:var(--neon-green)}
+summary{
+  padding:20px 24px;cursor:pointer;font-weight:700;font-size:1rem;
+  list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;
+}
+summary::after{content:"+";font-family:var(--font-display);color:var(--neon-yellow);font-size:1.4rem;transition:transform .2s}
+details[open] summary::after{content:"−";color:var(--neon-green)}
+details p{padding:0 24px 20px;color:var(--gray);font-size:.95rem}
+/* ── Footer ── */
+footer{
+  border-top:2px solid rgba(212,255,0,.2);
+  padding:40px 5vw;text-align:center;background:var(--bg2);
+}
+footer .logo{margin-bottom:10px;font-size:1.1rem}
+footer p{color:var(--gray-dark);font-size:.85rem}
+footer .tagline{font-family:var(--font-tag);color:var(--gray);font-size:.95rem;margin-bottom:14px}
+/* ── Responsive ── */
+@media(max-width:640px){
+  .nav-links a:not(.nav-cta){display:none}
+  header{padding-top:100px}
+  .hero-ctas{flex-direction:column;width:100%;max-width:320px}
+  .btn{justify-content:center}
+  .splat{opacity:.3}
+}
+@media(prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav>
+  <a href="#" class="logo">SHYF<span>TEX</span></a>
+  <div class="nav-links">
+    <a href="#como-funciona">Cómo funciona</a>
+    <a href="#ahorro">Ahorro</a>
+    <a href="#descargar">Descargar</a>
+    <a href="#faq">FAQ</a>
+    <a href="https://shyftex-preview.vercel.app" class="nav-cta" target="_blank" rel="noopener">Probar app →</a>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<header>
+  <svg class="splat splat-y" viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="#D4FF00"/><circle cx="20" cy="30" r="8" fill="#D4FF00"/><circle cx="80" cy="25" r="6" fill="#D4FF00"/><circle cx="75" cy="75" r="10" fill="#D4FF00"/><circle cx="25" cy="70" r="5" fill="#D4FF00"/></svg>
+  <svg class="splat splat-g" viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" fill="#39FF14"/><circle cx="15" cy="40" r="7" fill="#39FF14"/><circle cx="85" cy="55" r="9" fill="#39FF14"/><circle cx="60" cy="15" r="5" fill="#39FF14"/><circle cx="40" cy="88" r="6" fill="#39FF14"/></svg>
+  <svg class="splat splat-p" viewBox="0 0 100 100"><circle cx="50" cy="50" r="20" fill="#FF2E88"/><circle cx="25" cy="25" r="5" fill="#FF2E88"/><circle cx="78" cy="30" r="4" fill="#FF2E88"/></svg>
+
+  <span class="hero-tag">tu despensa, optimizada ✦</span>
+  <h1 class="hero-title">SHYF<span class="green">TEX</span><br><span class="outline">AHORRA</span></h1>
+  <p class="hero-sub">Escanea tu lista. Compara precios en <b>Walmart</b>, <b>Soriana</b>, <b>Costco</b> y más. <b>Optimiza tu ruta</b> de compra.</p>
+  <p class="hero-desc">SHYFTEX encuentra dónde comprar cada producto al mejor precio y te arma la ruta más eficiente. Menos tiempo, menos gasto, más despensa.</p>
+  <div class="hero-ctas">
+    <a href="#descargar" class="btn btn-yellow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 21h16"/></svg>
+      Descargar app
+    </a>
+    <a href="https://shyftex-preview.vercel.app" class="btn btn-green" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 5v14l11-7z"/></svg>
+      Probar preview
+    </a>
+  </div>
+</header>
+
+<!-- ═══ STORES ═══ -->
+<div class="stores">
+  <div class="stores-label">compara en las tiendas que ya conoces</div>
+  <div class="stores-row">
+    <span>WALMART</span><span>SORIANA</span><span>COSTCO</span><span>LA COMER</span><span>BODEGA</span><span>H-E-B</span>
+  </div>
+</div>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<section id="como-funciona">
+  <div class="section-head">
+    <span class="section-tag">así de fácil</span>
+    <h2 class="section-title">CÓMO <span class="y">FUNCIONA</span></h2>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <span class="step-num">01</span>
+      <span class="step-icon">📝</span>
+      <h3>Escanea tu lista</h3>
+      <p>Escribe o pega tu lista de la despensa. SHYFTEX la entiende al instante: productos, cantidades y prioridades.</p>
+    </div>
+    <div class="step">
+      <span class="step-num">02</span>
+      <span class="step-icon">💰</span>
+      <h3>Compara precios</h3>
+      <p>Consulta el precio de cada producto en todas las tiendas y encuentra dónde sale más barato cada uno.</p>
+    </div>
+    <div class="step">
+      <span class="step-num">03</span>
+      <span class="step-icon">🗺️</span>
+      <h3>Optimiza tu ruta</h3>
+      <p>SHYFTEX arma el plan de compra óptimo: qué comprar en cada tienda y en qué orden, para ahorrar al máximo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PROOF ═══ -->
+<section class="proof" id="ahorro">
+  <div class="section-head">
+    <span class="section-tag">los números no mienten</span>
+    <h2 class="section-title">AHORRO <span class="g">REAL</span></h2>
+  </div>
+  <div class="proof-grid">
+    <div class="proof-card">
+      <span class="label">ahorro promedio por despensa</span>
+      <span class="big">$7.81</span>
+      <p>Con una lista de 6 productos, SHYFTEX encontró un plan que ahorra $7.81 vs comprar todo en una sola tienda.</p>
+    </div>
+    <div class="proof-card">
+      <span class="label">tiendas comparadas</span>
+      <span class="big y">6+</span>
+      <p>Walmart, Soriana, Costco, La Comer, Bodega y H-E-B. Más tiendas = más oportunidades de ahorro.</p>
+    </div>
+    <div class="proof-card">
+      <span class="label">tiempo ahorrado</span>
+      <span class="big">30%</span>
+      <p>Una ruta optimizada te ahorra vueltas innecesarias en el pasillo. Menos tiempo, misma despensa.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DOWNLOAD ═══ -->
+<section id="descargar">
+  <div class="section-head">
+    <span class="section-tag">llévatela contigo</span>
+    <h2 class="section-title">DESCARGA <span class="y">LA APP</span></h2>
+  </div>
+  <div class="download-box">
+    <h3 class="download-title">SHYFTEX <span class="y">GRATIS</span></h3>
+    <p class="download-desc">Instala SHYFTEX en tu teléfono en segundos. Funciona en Android e iOS, sin tiendas de aplicaciones.</p>
+    <div class="download-btns">
+      <a href="https://shyftex-preview.vercel.app" class="btn-apk" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 21h16"/></svg>
+        Instalar app (PWA)
+      </a>
+      <a href="https://shyftex-preview.vercel.app" class="btn-pwa" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 5v14l11-7z"/></svg>
+        Probar en el navegador
+      </a>
+    </div>
+    <p class="download-meta">Versión <b>1.0.0</b> · Gratis · Sin registro · <b>APK Android próximamente</b></p>
+    <div class="install-steps">
+      <h4>📲 CÓMO INSTALAR</h4>
+      <ol>
+        <li>Abre el enlace desde tu <b>teléfono</b> (Android o iPhone)</li>
+        <li>En <b>Chrome/Android</b>: menú ⋮ → <b>"Agregar a pantalla de inicio"</b> o "Instalar app"</li>
+        <li>En <b>iPhone (Safari)</b>: botón compartir → <b>"Agregar a pantalla de inicio"</b></li>
+        <li>Listo — SHYFTEX queda instalada como una app normal 🎉</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FAQ ═══ -->
+<section id="faq">
+  <div class="section-head">
+    <span class="section-tag">preguntas frecuentes</span>
+    <h2 class="section-title">¿DUDAS? <span class="g">AQUÍ</span></h2>
+  </div>
+  <div class="faq">
+    <details>
+      <summary>¿SHYFTEX es gratis?</summary>
+      <p>Sí, completamente gratis. Sin registro, sin tarjetas, sin letras pequeñas. Descarga, instala y ahorra.</p>
+    </details>
+    <details>
+      <summary>¿En qué teléfonos funciona?</summary>
+      <p>Funciona en cualquier teléfono con navegador moderno: Android (Chrome) e iPhone (Safari). La versión APK para Android está en camino.</p>
+    </details>
+    <details>
+      <summary>¿Cómo sabe los precios de las tiendas?</summary>
+      <p>SHYFTEX usa información de precios de las tiendas participantes. La versión actual incluye datos de ejemplo para demostrar el flujo completo; la conexión con precios en tiempo real está en desarrollo.</p>
+    </details>
+    <details>
+      <summary>¿Necesito conexión a internet?</summary>
+      <p>Para la versión actual, sí — la app se abre desde el navegador. La versión nativa funcionará offline con tus listas guardadas.</p>
+    </details>
+    <details>
+      <summary>¿Mis datos están seguros?</summary>
+      <p>Sí. Tus listas se guardan en tu dispositivo. No vendemos datos ni mostramos anuncios. Punto.</p>
+    </details>
+    <details>
+      <summary>¿Cuándo sale el APK de Android?</summary>
+      <p>Estamos trabajando en ello. Mientras tanto, la instalación PWA te da la misma experiencia de app en tu teléfono.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <a href="#" class="logo">SHYF<span>TEX</span></a>
+  <p class="tagline">tu lista · tu ruta · tu ahorro</p>
+  <p>© 2026 SHYFTEX · Hecho con 🛒 y mucho neón</p>
+</footer>
+
+</body>
+</html>
