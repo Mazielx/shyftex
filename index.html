@@ -75,10 +75,9 @@ nav{
   transform:rotate(-2deg);
   display:inline-flex;align-items:center;gap:0;
 }
-.logo svg{height:1em;width:1em;display:inline-block;vertical-align:-0.12em}
-.logo .arrow-s{filter:drop-shadow(0 0 5px rgba(212,255,0,.8))}
-.logo .arrow-t{filter:drop-shadow(0 0 5px rgba(57,255,20,.8))}
-.logo span{color:var(--neon-green);text-shadow:var(--glow-green)}
+.logo svg{height:1.6em;width:auto;display:inline-block;vertical-align:middle}
+.logo .st-s{filter:drop-shadow(0 0 5px rgba(212,255,0,.8))}
+.logo .st-t{filter:drop-shadow(0 0 5px rgba(57,255,20,.8))}
 .nav-links{display:flex;gap:28px;align-items:center}
 .nav-links a{
   color:var(--white);text-decoration:none;font-weight:500;font-size:.95rem;
@@ -293,26 +292,20 @@ footer .tagline{font-family:var(--font-tag);color:var(--gray);font-size:.95rem;m
 
 <!-- ═══ NAV ═══ -->
 <nav>
-  <a href="#" class="logo">
-    <svg class="arrow-s" viewBox="0 0 100 100" aria-hidden="true">
+  <a href="#" class="logo" aria-label="SHYFTEX">
+    <svg viewBox="0 0 200 100" aria-hidden="true">
       <defs>
         <marker id="ah-y" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="1.6" markerHeight="1.6" orient="auto">
           <path d="M0,0 L10,5 L0,10 z" fill="#D4FF00"/>
         </marker>
-      </defs>
-      <line x1="12" y1="25" x2="55" y2="25" stroke="#D4FF00" stroke-width="8" stroke-linecap="round" marker-end="url(#ah-y)"/>
-      <line x1="55" y1="25" x2="32" y2="58" stroke="#D4FF00" stroke-width="8" stroke-linecap="round" marker-end="url(#ah-y)"/>
-      <line x1="32" y1="58" x2="70" y2="58" stroke="#D4FF00" stroke-width="8" stroke-linecap="round" marker-end="url(#ah-y)"/>
-    </svg>HYF
-    <svg class="arrow-t" viewBox="0 0 100 100" aria-hidden="true">
-      <defs>
         <marker id="ah-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="1.6" markerHeight="1.6" orient="auto">
           <path d="M0,0 L10,5 L0,10 z" fill="#39FF14"/>
         </marker>
       </defs>
-      <line x1="12" y1="25" x2="78" y2="25" stroke="#39FF14" stroke-width="8" stroke-linecap="round" marker-end="url(#ah-g)"/>
-      <line x1="45" y1="25" x2="45" y2="80" stroke="#39FF14" stroke-width="8" stroke-linecap="round" marker-end="url(#ah-g)"/>
-    </svg>EX
+      <path class="st-s" d="M 30 80 C 30 55, 70 55, 70 40 C 70 25, 30 30, 30 18" stroke="#D4FF00" stroke-width="8" fill="none" stroke-linecap="round" marker-end="url(#ah-y)"/>
+      <line class="st-t" x1="120" y1="30" x2="180" y2="30" stroke="#39FF14" stroke-width="8" stroke-linecap="round" marker-end="url(#ah-g)"/>
+      <line class="st-t" x1="150" y1="30" x2="150" y2="80" stroke="#39FF14" stroke-width="8" stroke-linecap="round"/>
+    </svg>
   </a>
   <div class="nav-links">
     <a href="#como-funciona">Cómo funciona</a>
@@ -480,16 +473,12 @@ footer .tagline{font-family:var(--font-tag);color:var(--gray);font-size:.95rem;m
 
 <!-- ═══ FOOTER ═══ -->
 <footer>
-  <a href="#" class="logo">
-    <svg class="arrow-s" viewBox="0 0 100 100" aria-hidden="true">
-      <line x1="12" y1="25" x2="55" y2="25" stroke="#D4FF00" stroke-width="8" stroke-linecap="round" marker-end="url(#ah-y)"/>
-      <line x1="55" y1="25" x2="32" y2="58" stroke="#D4FF00" stroke-width="8" stroke-linecap="round" marker-end="url(#ah-y)"/>
-      <line x1="32" y1="58" x2="70" y2="58" stroke="#D4FF00" stroke-width="8" stroke-linecap="round" marker-end="url(#ah-y)"/>
-    </svg>HYF
-    <svg class="arrow-t" viewBox="0 0 100 100" aria-hidden="true">
-      <line x1="12" y1="25" x2="78" y2="25" stroke="#39FF14" stroke-width="8" stroke-linecap="round" marker-end="url(#ah-g)"/>
-      <line x1="45" y1="25" x2="45" y2="80" stroke="#39FF14" stroke-width="8" stroke-linecap="round" marker-end="url(#ah-g)"/>
-    </svg>EX
+  <a href="#" class="logo" aria-label="SHYFTEX">
+    <svg viewBox="0 0 200 100" aria-hidden="true">
+      <path class="st-s" d="M 30 80 C 30 55, 70 55, 70 40 C 70 25, 30 30, 30 18" stroke="#D4FF00" stroke-width="8" fill="none" stroke-linecap="round" marker-end="url(#ah-y)"/>
+      <line class="st-t" x1="120" y1="30" x2="180" y2="30" stroke="#39FF14" stroke-width="8" stroke-linecap="round" marker-end="url(#ah-g)"/>
+      <line class="st-t" x1="150" y1="30" x2="150" y2="80" stroke="#39FF14" stroke-width="8" stroke-linecap="round"/>
+    </svg>
   </a>
   <p class="tagline">tu lista · tu ruta · tu ahorro</p>
   <p>© 2026 SHYFTEX · Hecho con 🛒 y mucho neón</p>
