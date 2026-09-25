@@ -68,17 +68,18 @@ nav{
 }
 .logo{
   font-family:var(--font-display);
-  font-size:1.35rem;letter-spacing:1px;
-  color:var(--neon-yellow);
-  text-shadow:var(--glow-yellow);
+  font-size:1.6rem;letter-spacing:1px;
   text-decoration:none;
   transform:rotate(-2deg);
-  display:inline-flex;align-items:center;gap:0;
+  display:inline-flex;align-items:center;gap:2px;
 }
-.logo svg{height:1.6em;width:auto;display:inline-block;vertical-align:middle}
-.logo .st-s{filter:drop-shadow(0 0 5px rgba(212,255,0,.8))}
-.logo .st-s2{filter:drop-shadow(0 0 5px rgba(57,255,20,.8))}
-.logo .st-t{filter:drop-shadow(0 0 5px rgba(57,255,20,.8))}
+.logo .st-s{color:var(--neon-yellow);text-shadow:var(--glow-yellow);position:relative;display:inline-block}
+.logo .st-t{color:var(--neon-green);text-shadow:var(--glow-green);position:relative;display:inline-block}
+.logo .tip{
+  position:absolute;top:-0.08em;right:-0.42em;
+  width:0.38em;height:0.38em;
+  filter:drop-shadow(0 0 4px currentColor);
+}
 .nav-links{display:flex;gap:28px;align-items:center}
 .nav-links a{
   color:var(--white);text-decoration:none;font-weight:500;font-size:.95rem;
@@ -290,24 +291,21 @@ footer .tagline{font-family:var(--font-tag);color:var(--gray);font-size:.95rem;m
 <body>
 
 <canvas id="neon-bg" aria-hidden="true"></canvas>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah-y" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="1.6" markerHeight="1.6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#D4FF00"/>
+    </marker>
+    <marker id="ah-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="1.6" markerHeight="1.6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#39FF14"/>
+    </marker>
+  </defs>
+</svg>
 
 <!-- ═══ NAV ═══ -->
 <nav>
   <a href="#" class="logo" aria-label="SHYFTEX">
-    <svg viewBox="0 0 200 100" aria-hidden="true">
-      <defs>
-        <marker id="ah-y" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="1.6" markerHeight="1.6" orient="auto">
-          <path d="M0,0 L10,5 L0,10 z" fill="#D4FF00"/>
-        </marker>
-        <marker id="ah-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="1.6" markerHeight="1.6" orient="auto">
-          <path d="M0,0 L10,5 L0,10 z" fill="#39FF14"/>
-        </marker>
-      </defs>
-      <path class="st-s" d="M 20 20 C 20 52, 74 42, 80 50" stroke="#D4FF00" stroke-width="8" fill="none" stroke-linecap="round" marker-end="url(#ah-y)"/>
-      <path class="st-s2" d="M 80 50 C 76 58, 26 56, 20 76" stroke="#39FF14" stroke-width="8" fill="none" stroke-linecap="round" marker-end="url(#ah-g)"/>
-      <line class="st-t" x1="120" y1="30" x2="180" y2="30" stroke="#39FF14" stroke-width="8" stroke-linecap="round" marker-end="url(#ah-g)"/>
-      <line class="st-t" x1="150" y1="30" x2="150" y2="80" stroke="#39FF14" stroke-width="8" stroke-linecap="round"/>
-    </svg>
+    <span class="st-s">S<svg class="tip" viewBox="0 0 10 10" aria-hidden="true"><path d="M0,0 L10,5 L0,10 z" fill="#D4FF00"/></svg></span><span class="st-t">T<svg class="tip" viewBox="0 0 10 10" aria-hidden="true"><path d="M0,0 L10,5 L0,10 z" fill="#39FF14"/></svg></span>
   </a>
   <div class="nav-links">
     <a href="#como-funciona">Cómo funciona</a>
@@ -476,12 +474,7 @@ footer .tagline{font-family:var(--font-tag);color:var(--gray);font-size:.95rem;m
 <!-- ═══ FOOTER ═══ -->
 <footer>
   <a href="#" class="logo" aria-label="SHYFTEX">
-    <svg viewBox="0 0 200 100" aria-hidden="true">
-      <path class="st-s" d="M 20 20 C 20 52, 74 42, 80 50" stroke="#D4FF00" stroke-width="8" fill="none" stroke-linecap="round" marker-end="url(#ah-y)"/>
-      <path class="st-s2" d="M 80 50 C 76 58, 26 56, 20 76" stroke="#39FF14" stroke-width="8" fill="none" stroke-linecap="round" marker-end="url(#ah-g)"/>
-      <line class="st-t" x1="120" y1="30" x2="180" y2="30" stroke="#39FF14" stroke-width="8" stroke-linecap="round" marker-end="url(#ah-g)"/>
-      <line class="st-t" x1="150" y1="30" x2="150" y2="80" stroke="#39FF14" stroke-width="8" stroke-linecap="round"/>
-    </svg>
+    <span class="st-s">S<svg class="tip" viewBox="0 0 10 10" aria-hidden="true"><path d="M0,0 L10,5 L0,10 z" fill="#D4FF00"/></svg></span><span class="st-t">T<svg class="tip" viewBox="0 0 10 10" aria-hidden="true"><path d="M0,0 L10,5 L0,10 z" fill="#39FF14"/></svg></span>
   </a>
   <p class="tagline">tu lista · tu ruta · tu ahorro</p>
   <p>© 2026 SHYFTEX · Hecho con 🛒 y mucho neón</p>
