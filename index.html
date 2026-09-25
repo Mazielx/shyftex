@@ -40,11 +40,6 @@ body{
   overflow-x:hidden;
   line-height:1.6;
 }
-/* ── Neon vector lines background (canvas) ── */
-#neon-bg{
-  position:fixed;inset:0;z-index:0;pointer-events:none;
-  display:block;
-}
 nav,header,section,footer,.stores{position:relative;z-index:1}
 /* ── Spray / noise overlay ── */
 body::before{
@@ -88,7 +83,6 @@ nav{
   fill:var(--neon-green);
   filter:url(#st-glow-green);
 }
-.st-t-arrow{fill:var(--bg)}
 .nav-links{display:flex;gap:28px;align-items:center}
 .nav-links a{
   color:var(--white);text-decoration:none;font-weight:500;font-size:.95rem;
@@ -107,7 +101,18 @@ header{
   min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;
   text-align:center;position:relative;padding:120px 5vw 60px;
   background:transparent;
+  isolation:isolate;
 }
+/* Faro: soft headlight reflection on the pavement, beams aimed at the wordmark.
+   Box is anchored to the header box (top:0;height:100%) and its width can never
+   exceed the containing block (min(100%,1100px) + max-width:100%), so it can
+   never create horizontal scroll; overflow:clip keeps the blurred beams inside. */
+.hero-lightspot{position:absolute;z-index:-1;pointer-events:none;left:50%;top:0;width:min(100%,1100px);max-width:100%;height:100%;transform:translateX(-50%);overflow:clip;opacity:var(--spot-opacity,.5);background:radial-gradient(ellipse 13% 4.5% at 50% 91%,rgba(255,255,226,.5),rgba(212,255,0,.26) 58%,transparent 78%),radial-gradient(ellipse 33% 9% at 50% 91%,rgba(212,255,0,.32),rgba(212,255,0,.12) 54%,transparent 77%),radial-gradient(ellipse 47% 13% at 50% 90%,rgba(57,255,20,.1),transparent 74%),radial-gradient(ellipse 66% 16% at 50% 97%,rgba(212,255,0,.13),transparent 72%),radial-gradient(ellipse 11% 20% at 50% 68%,rgba(212,255,0,.06),transparent 72%),radial-gradient(ellipse 26% 15% at 50% 36%,rgba(212,255,0,.12),transparent 68%);filter:blur(26px);transition:opacity 180ms ease-out}
+.hero-lightspot::before,.hero-lightspot::after{content:"";position:absolute;left:50%;top:30%;width:18%;height:61%;transform-origin:50% 100%;background:linear-gradient(to top,rgba(212,255,0,.32),rgba(212,255,0,.1) 20%,rgba(212,255,0,.035) 42%,rgba(212,255,0,.025) 80%,transparent 100%);clip-path:polygon(50% 100%,150% 0,-50% 0)}
+.hero-lightspot::before{transform:translateX(-50%) rotate(-7deg)}
+.hero-lightspot::after{transform:translateX(-50%) rotate(7deg)}
+@media(max-width:640px){.hero-lightspot{width:100%;max-width:100%;filter:blur(18px)}.hero-lightspot::before,.hero-lightspot::after{width:60%}.hero-lightspot::before{transform:translateX(-50%) rotate(-5deg)}.hero-lightspot::after{transform:translateX(-50%) rotate(5deg)}}
+@media(prefers-reduced-motion:reduce){.hero-lightspot{transition:none}}
 .hero-tag{
   font-family:var(--font-tag);color:var(--pink);font-size:1.3rem;
   transform:rotate(-3deg);margin-bottom:10px;
@@ -299,7 +304,6 @@ footer .tagline{font-family:var(--font-tag);color:var(--gray);font-size:.95rem;m
 </head>
 <body>
 
-<canvas id="neon-bg" aria-hidden="true"></canvas>
 <svg class="svg-defs" width="0" height="0" aria-hidden="true" focusable="false">
   <defs>
     <filter id="st-glow-yellow" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
@@ -318,8 +322,7 @@ footer .tagline{font-family:var(--font-tag);color:var(--gray);font-size:.95rem;m
       <path class="st-s-head" d="M7 59 L21 41 L25 49 L30 57 Z"/>
     </symbol>
     <symbol id="st-glyph-t" viewBox="0 0 60 64">
-      <path class="st-t-fill" d="M5 7 H53 V21 H40 V57 H18 V21 H5 Z"/>
-      <path class="st-t-arrow" d="M29 25 L22 37 H26 V48 H32 V37 H36 Z"/>
+      <path class="st-t-fill" d="M5 7 H43 L58 14 L43 21 H37 V57 H21 V21 H5 Z"/>
     </symbol>
   </defs>
 </svg>
@@ -343,6 +346,7 @@ footer .tagline{font-family:var(--font-tag);color:var(--gray);font-size:.95rem;m
 
 <!-- ═══ HERO ═══ -->
 <header>
+  <div class="hero-lightspot" aria-hidden="true"></div>
   <span class="hero-tag">tu despensa, optimizada ✦</span>
   <h1 class="hero-title">
     <svg class="hero-st-glyph hero-st-s" viewBox="0 0 70 64" aria-hidden="true" focusable="false"><use href="#st-glyph-s"/></svg>HYF
@@ -501,282 +505,22 @@ footer .tagline{font-family:var(--font-tag);color:var(--gray);font-size:.95rem;m
   <p>© 2026 SHYFTEX · Todos los derechos reservados.</p>
 </footer>
 <script>
-/* ── Fixed neon side-lane background ──
-   The canvas is decorative and stays inside the outer 5vw gutters.
-   It uses predetermined routes only; it never samples page content. */
+/* Soft headlight reflection; monotonic recursive timeouts avoid interval drift. */
 (function(){
-  const canvas = document.getElementById('neon-bg');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  const CONTENT_INSET_RATIO = 0.05;
-  const SAFETY_GUTTER = 10;
-  const ROUTE_PADDING = 4;
-  const MIN_LANE_WIDTH = 18;
-  const EDGE_GUARD = 4;
-  const BASELINE_COLOR = 'rgba(154,154,154,0.46)';
-  const COLORS = ['#D4FF00', '#39FF14'];
-  const SPRITE_COUNT = 3;
-  const SPRITE_EDGE_FADE = 0.14;
-  const SPRITE_BASE_WIDTH = 30;
-  const SPRITE_BASE_HEIGHT = 16;
-  const motionQuery = window.matchMedia
-    ? window.matchMedia('(prefers-reduced-motion: reduce)')
-    : { matches: false };
-  let W = 0;
-  let H = 0;
-  let dpr = 1;
-  let lanes = [];
-  let running = false;
-  let frameId = 0;
-  let startTime = performance.now();
-
-  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-
-  function createRoute(lane){
-    const top = -28;
-    const bottom = H + 28;
-    const sampleCount = Math.max(36, Math.ceil((bottom - top) / 10));
-    const points = [];
-    for (let i = 0; i <= sampleCount; i += 1){
-      const progress = i / sampleCount;
-      const y = top + (bottom - top) * progress;
-      const wave =
-        Math.sin(progress * Math.PI * 3.4 + lane.phase) * lane.bend +
-        Math.sin(progress * Math.PI * 7.2 + lane.phase * 1.7) * lane.bend * 0.18;
-      points.push({ x: lane.center + wave, y });
-    }
-    if (lane.direction < 0) points.reverse();
-    lane.points = points;
-    lane.distances = [0];
-    lane.routeLength = 0;
-    for (let i = 1; i < points.length; i += 1){
-      lane.routeLength += Math.hypot(
-        points[i].x - points[i - 1].x,
-        points[i].y - points[i - 1].y
-      );
-      lane.distances.push(lane.routeLength);
-    }
-  }
-
-  function createArrowSprite(color, scale){
-    const width = SPRITE_BASE_WIDTH * scale;
-    const height = SPRITE_BASE_HEIGHT * scale;
-    const sprite = document.createElement('canvas');
-    sprite.width = Math.max(1, Math.ceil(width * dpr));
-    sprite.height = Math.max(1, Math.ceil(height * dpr));
-    const spriteCtx = sprite.getContext('2d');
-    if (!spriteCtx) return null;
-    spriteCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    const centerY = height / 2;
-    spriteCtx.save();
-    spriteCtx.fillStyle = color;
-    spriteCtx.shadowColor = color;
-    spriteCtx.shadowBlur = 7 * scale;
-    spriteCtx.lineJoin = 'round';
-    spriteCtx.beginPath();
-    spriteCtx.moveTo(width * 0.92, centerY);
-    spriteCtx.lineTo(width * 0.58, centerY - height * 0.32);
-    spriteCtx.lineTo(width * 0.58, centerY - height * 0.10);
-    spriteCtx.lineTo(width * 0.08, centerY - height * 0.10);
-    spriteCtx.lineTo(width * 0.08, centerY + height * 0.10);
-    spriteCtx.lineTo(width * 0.58, centerY + height * 0.10);
-    spriteCtx.lineTo(width * 0.58, centerY + height * 0.32);
-    spriteCtx.closePath();
-    spriteCtx.fill();
-
-    spriteCtx.globalAlpha = 0.42;
-    spriteCtx.strokeStyle = color;
-    spriteCtx.lineWidth = Math.max(1, 1.4 * scale);
-    spriteCtx.lineCap = 'round';
-    spriteCtx.beginPath();
-    spriteCtx.moveTo(width * 0.10, centerY);
-    spriteCtx.lineTo(width * 0.38, centerY);
-    spriteCtx.stroke();
-    spriteCtx.restore();
-    return { canvas: sprite, width, height };
-  }
-
-  function buildLanes(){
-    const contentEdge = W * CONTENT_INSET_RATIO;
-    const routeMin = SAFETY_GUTTER + ROUTE_PADDING;
-    const routeMax = contentEdge - SAFETY_GUTTER - EDGE_GUARD / dpr;
-    const available = routeMax - routeMin;
-    if (available < MIN_LANE_WIDTH) return [];
-
-    const centerDistance = (routeMin + routeMax) / 2;
-    const bend = Math.min(5, available * 0.16);
-    const laneSpecs = [
-      { side: -1, color: COLORS[0], phase: 0.18, speed: 0.00010, direction: 1 },
-      { side: 1, color: COLORS[1], phase: 0.64, speed: 0.00008, direction: -1 }
-    ];
-
-    const spriteScale = Math.min(1, Math.max(0.64, available / 28));
-    return laneSpecs.map(spec => {
-      const lane = {
-        ...spec,
-        center: spec.side < 0 ? centerDistance : W - centerDistance,
-        bend,
-        points: [],
-        distances: [],
-        routeLength: 0,
-        sprite: null,
-        sprites: []
-      };
-      createRoute(lane);
-      lane.sprite = createArrowSprite(lane.color, spriteScale);
-      lane.sprites = Array.from({ length: SPRITE_COUNT }, (_, index) => ({
-        offset: index / SPRITE_COUNT,
-        glowPhase: lane.phase + index * 1.7
-      }));
-      return lane;
-    });
-  }
-
-  function pointAtDistance(lane, distance){
-    if (lane.routeLength <= 0) return lane.points[0] || { x: 0, y: 0 };
-    const target = clamp(distance, 0, lane.routeLength);
-    let upper = 1;
-    while (upper < lane.distances.length - 1 && lane.distances[upper] < target) upper += 1;
-    const lower = upper - 1;
-    const segmentLength = lane.distances[upper] - lane.distances[lower] || 1;
-    const amount = (target - lane.distances[lower]) / segmentLength;
-    const start = lane.points[lower];
-    const end = lane.points[upper];
-    return {
-      x: start.x + (end.x - start.x) * amount,
-      y: start.y + (end.y - start.y) * amount
-    };
-  }
-
-  function sampleRoute(lane, progress){
-    const distance = clamp(progress, 0, 1) * lane.routeLength;
-    const tangentDistance = Math.max(1, lane.routeLength * 0.008);
-    const point = pointAtDistance(lane, distance);
-    const before = pointAtDistance(lane, distance - tangentDistance);
-    const after = pointAtDistance(lane, distance + tangentDistance);
-    return {
-      x: point.x,
-      y: point.y,
-      angle: Math.atan2(after.y - before.y, after.x - before.x)
-    };
-  }
-
-  function smoothStep(value){
-    const amount = clamp(value, 0, 1);
-    return amount * amount * (3 - 2 * amount);
-  }
-
-  function edgeFade(progress){
-    const amount = clamp(progress, 0, 1);
-    if (amount < SPRITE_EDGE_FADE) return smoothStep(amount / SPRITE_EDGE_FADE);
-    if (amount > 1 - SPRITE_EDGE_FADE) return smoothStep((1 - amount) / SPRITE_EDGE_FADE);
-    return 1;
-  }
-
-  function getLaneBoundary(){
-    return Math.max(0, W * CONTENT_INSET_RATIO - SAFETY_GUTTER - EDGE_GUARD / dpr);
-  }
-
-  function drawPath(lane, fromProgress, toProgress, color, lineWidth, alpha){
-    const from = Math.min(fromProgress, toProgress);
-    const to = Math.max(fromProgress, toProgress);
-    const fromIndex = Math.floor(from * (lane.points.length - 1));
-    const toIndex = Math.max(fromIndex, Math.ceil(to * (lane.points.length - 1)));
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = lineWidth;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    for (let i = fromIndex; i <= toIndex; i += 1){
-      const point = lane.points[i];
-      if (i === fromIndex) ctx.moveTo(point.x, point.y);
-      else ctx.lineTo(point.x, point.y);
-    }
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function drawSprite(lane, spriteState, elapsed){
-    if (!lane.sprite) return;
-    const progress = (elapsed * lane.speed + spriteState.offset) % 1;
-    const sample = sampleRoute(lane, progress);
-    const glow = 0.5 + 0.5 * Math.sin(elapsed * 0.002 + spriteState.glowPhase);
-    ctx.save();
-    ctx.translate(sample.x, sample.y);
-    ctx.rotate(sample.angle);
-    ctx.globalAlpha = edgeFade(progress) * (0.68 + glow * 0.32);
-    ctx.drawImage(
-      lane.sprite.canvas,
-      -lane.sprite.width / 2,
-      -lane.sprite.height / 2,
-      lane.sprite.width,
-      lane.sprite.height
-    );
-    ctx.restore();
-  }
-
-  function drawFrame(timestamp){
-    ctx.clearRect(0, 0, W, H);
-    if (!lanes.length) return;
-    const laneBoundary = getLaneBoundary();
-    const elapsed = Math.max(0, timestamp - startTime);
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, 0, laneBoundary, H);
-    ctx.rect(W - laneBoundary, 0, laneBoundary, H);
-    ctx.clip();
-    for (const lane of lanes){
-      drawPath(lane, 0, 1, BASELINE_COLOR, 1.5, 1);
-      for (const spriteState of lane.sprites) drawSprite(lane, spriteState, elapsed);
-    }
-    ctx.restore();
-  }
-
-  function syncAnimation(){
-    if (lanes.length && !motionQuery.matches){
-      if (!running){
-        running = true;
-        startTime = performance.now();
-        frameId = requestAnimationFrame(animate);
-      }
-      return;
-    }
-    running = false;
-    if (frameId) cancelAnimationFrame(frameId);
-    frameId = 0;
-    drawFrame(performance.now());
-  }
-
-  function animate(timestamp){
-    if (!running) return;
-    drawFrame(timestamp);
-    frameId = requestAnimationFrame(animate);
-  }
-
-  function resize(){
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = window.innerWidth;
-    H = window.innerHeight;
-    canvas.width = Math.max(1, Math.round(W * dpr));
-    canvas.height = Math.max(1, Math.round(H * dpr));
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    lanes = buildLanes();
-    drawFrame(performance.now());
-    syncAnimation();
-  }
-
-  window.addEventListener('resize', resize, { passive: true });
-  if (motionQuery.addEventListener) motionQuery.addEventListener('change', syncAnimation);
-  else if (motionQuery.addListener) motionQuery.addListener(syncAnimation);
-  resize();
+  const spot = document.querySelector('.hero-lightspot');
+  if (!spot) return;
+  const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const ON = 10000, OFF = 12000, PULSE = 140, GAP = 180, MAX = 0.6;
+  let timer = 0, epoch = performance.now(), cancelled = false;
+  function setLevel(level){spot.style.setProperty('--spot-opacity',String(Math.max(0,Math.min(MAX,level))));}
+  function wait(delay,next){if(cancelled)return;timer=window.setTimeout(function(){if(!cancelled)next();},delay);}
+  function flicker(after){let pulse=0;function step(){if(pulse>=4){wait(GAP,after);return;}setLevel(pulse%2===0?MAX*0.5:MAX);pulse+=1;wait(pulse===2?GAP:PULSE,step);}step();}
+  function cycle(){setLevel(MAX);wait(Math.max(0,epoch+ON-performance.now()),function(){flicker(function(){setLevel(0);wait(OFF,function(){flicker(function(){epoch=performance.now();cycle();});});});});}
+  function syncMotion(){window.clearTimeout(timer);cancelled=motionQuery.matches;if(cancelled){setLevel(MAX*0.5);return;}epoch=performance.now();cycle();}
+  if(motionQuery.addEventListener)motionQuery.addEventListener('change',syncMotion);else if(motionQuery.addListener)motionQuery.addListener(syncMotion);
+  syncMotion();
 })();
 </script>
+
 </body>
 </html>
