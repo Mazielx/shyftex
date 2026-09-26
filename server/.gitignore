@@ -1,0 +1,9 @@
+# Local environment files (never commit real credentials)
+.env*
+
+# Vercel CLI local state (project link, pulled env)
+.vercel/
+
+# Build output
+dist/
+*.tsbuildinfo

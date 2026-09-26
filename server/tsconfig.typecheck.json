@@ -1,0 +1,13 @@
+{
+  // Typecheck gate that covers *both* entrypoints:
+  //   - src/**  the long-lived runtime (node dist/index.js)
+  //   - api/**  the Vercel serverless function (api/index.ts)
+  // `tsc` alone cannot do this because the build config pins `rootDir` to `src`
+  // so that `dist/index.js` keeps a stable path for the Docker/Render image.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": ["src/**/*", "api/**/*"]
+}

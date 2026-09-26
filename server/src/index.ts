@@ -1,136 +1,64 @@
+/**
+ * Entrypoint for both runtimes:
+ *  - local dev / Docker / Render: starts a real HTTP server on $PORT
+ *  - Vercel serverless: only default-exports the ready Fastify instance
+ *
+ * `@vercel/node` imports the default export, so this module must not bind a port
+ * when running on Vercel.
+ */
 import 'dotenv/config';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import Fastify from 'fastify';
-import cors from '@fastify/cors';
-
-import jwt from '@fastify/jwt';
-import rateLimit from '@fastify/rate-limit';
-import { readFileSync } from 'fs';
-import authRoutes from './routes/auth.js';
-import listsRoutes from './routes/lists.js';
-import storesRoutes from './routes/stores.js';
-import optimizeRoutes from './routes/optimize.js';
-import missionsRoutes from './routes/missions.js';
-import historyRoutes from './routes/history.js';
-import preferencesRoutes from './routes/preferences.js';
-import parseRoutes from './routes/parse.js';
-import subscriptionRoutes from './routes/subscription.js';
-import { connectDatabase, disconnectDatabase, prisma } from './lib/prisma.js';
+import { buildApp, isServerless } from './app.js';
+import { connectDatabase, disconnectDatabase } from './lib/prisma.js';
 import { seedDatabase } from './seed.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const PORT = parseInt(process.env['PORT'] ?? '4000', 10);
 const HOST = process.env['HOST'] ?? '0.0.0.0';
 
-// Fail fast: JWT_SECRET is required, especially in production
-const JWT_SECRET = process.env['JWT_SECRET'];
-if (!JWT_SECRET) {
-  throw new Error(
-    'JWT_SECRET environment variable is required. Generate one with: openssl rand -hex 32',
-  );
-}
-if (JWT_SECRET === 'dev-secret-change-in-production') {
-  throw new Error('JWT_SECRET must not be the default dev value. Generate a real secret.');
+/** Demo stores are only seeded when explicitly asked for — never in production. */
+function shouldSeed(): boolean {
+  const flag = process.env['SEED_ON_START'];
+  if (flag !== undefined) {
+    return flag === 'true' || flag === '1';
+  }
+  return process.env['NODE_ENV'] !== 'production';
 }
 
-const app = Fastify({
-  logger: {
-    level: process.env['LOG_LEVEL'] ?? 'info',
-  },
-});
+const app = await buildApp();
 
-await app.register(cors, {
-  origin: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-});
+// On Vercel the module-level await above is the end of setup: the function
+// handler is invoked with an already-ready instance. Seeding and listening are
+// long-lived-process concerns only.
+if (!isServerless) {
+  await connectDatabase();
+  if (shouldSeed()) {
+    await seedDatabase(app.log);
+  }
 
-await app.register(jwt, {
-  secret: JWT_SECRET,
-  sign: { algorithm: 'HS256' },
-});
-
-await app.register(rateLimit, {
-  max: 100,
-  timeWindow: '1 minute',
-});
-
-await app.register(authRoutes);
-await app.register(listsRoutes);
-await app.register(storesRoutes);
-await app.register(optimizeRoutes);
-await app.register(missionsRoutes);
-await app.register(historyRoutes);
-await app.register(preferencesRoutes);
-await app.register(parseRoutes);
-await app.register(subscriptionRoutes);
-
-app.get('/api/v1/health', async (_request, reply) => {
   try {
-    // Verify DB connectivity
-    await prisma.$queryRaw`SELECT 1`;
-    return { status: 'ok', database: 'connected', timestamp: new Date().toISOString() };
+    await app.listen({ port: PORT, host: HOST });
+    app.log.info(`Server running on http://${HOST}:${PORT}`);
   } catch (err) {
-    reply.status(503);
-    return {
-      status: 'error',
-      database: 'disconnected',
-      timestamp: new Date().toISOString(),
-    };
+    app.log.fatal(err);
+    await disconnectDatabase();
+    process.exit(1);
   }
-});
 
-// Serve app.html from project root
-const appHtmlPath = join(__dirname, '..', '..', 'app.html');
-app.get('/', async (_request, reply) => {
-  try {
-    const html = readFileSync(appHtmlPath, 'utf-8');
-    return reply.type('text/html').send(html);
-  } catch {
-    return reply.status(404).send({ error: 'app.html not found' });
-  }
-});
-
-app.setErrorHandler((error: Error & { statusCode?: number; code?: string }, _request, reply) => {
-  app.log.error(error);
-  const statusCode = error.statusCode ?? 500;
-  const code = error.code ?? 'INTERNAL_ERROR';
-  reply.status(statusCode).send({
-    success: false,
-    error: {
-      code,
-      message: process.env['NODE_ENV'] === 'production'
-        ? 'An unexpected error occurred'
-        : error.message,
-    },
+  // Graceful shutdown (long-lived runtimes only)
+  process.on('SIGTERM', () => {
+    void (async () => {
+      await app.close();
+      await disconnectDatabase();
+      process.exit(0);
+    })();
   });
-});
 
-// Connect to database and seed
-await connectDatabase();
-await seedDatabase(app.log);
-
-try {
-  await app.listen({ port: PORT, host: HOST });
-  app.log.info(`Server running on http://${HOST}:${PORT}`);
-} catch (err) {
-  app.log.fatal(err);
-  await disconnectDatabase();
-  process.exit(1);
+  process.on('SIGINT', () => {
+    void (async () => {
+      await app.close();
+      await disconnectDatabase();
+      process.exit(0);
+    })();
+  });
 }
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  await app.close();
-  await disconnectDatabase();
-  process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-  await app.close();
-  await disconnectDatabase();
-  process.exit(0);
-});
+export default app;

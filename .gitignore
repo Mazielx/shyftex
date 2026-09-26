@@ -72,3 +72,6 @@ server/src/generated/
 
 # Backend build
 server/dist/
+
+# Vercel CLI local state (project link + pulled env vars)
+.vercel/

@@ -1,0 +1,46 @@
+# Governs what the shyftex-api deployment uploads. The project's Vercel
+# rootDirectory is `server/`, so everything the function needs lives under
+# server/api and server/src — the Expo app at the repo root is dead weight.
+#
+# Patterns are anchored with a leading slash on purpose: a bare `src/` would also
+# match server/src and break the function build.
+
+# Expo app / repo-root artefacts (not part of the API)
+/src/
+/android/
+/assets/
+/.expo/
+/dist/
+/app.html
+/app.json
+/babel.config.js
+/jest.config.js
+/eslint.config.mjs
+/serve.js
+/tunel.sh
+/iniciar.sh
+/docker-compose.yml
+/Dockerfile
+/render.yaml
+/railway.json
+/CLAUDE.md
+/AGENTS.md
+/DECISIONS.md
+/IMPLEMENTATION_PLAN.md
+/README.md
+/LICENSE
+/coverage/
+/android
+
+# Credentials — must never leave the machine
+**/.env
+**/.env.*
+**/.vercel/
+**/secrets/
+**/*.pem
+**/*.key
+
+# Installed dependencies and build output are reproduced inside the build
+**/node_modules/
+**/dist/
+**/*.tsbuildinfo
