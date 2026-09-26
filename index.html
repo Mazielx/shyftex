@@ -105,7 +105,7 @@ header{
 }
 /* Faro: circular pool of light behind the hero tag + wordmark.
    Pure circle (no beams, no bottom pool) centered on the tag/title area. */
-.hero-lightspot{position:absolute;z-index:-1;pointer-events:none;left:50%;top:38%;width:min(92vw,880px);height:min(92vw,880px);transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(255,255,226,.38),rgba(212,255,0,.22) 30%,rgba(212,255,0,.10) 55%,rgba(57,255,20,.05) 68%,transparent 80%);filter:blur(12px);opacity:var(--spot-opacity,.5);transition:opacity 180ms ease-out}
+.hero-lightspot{position:absolute;z-index:-1;pointer-events:none;left:50%;top:38%;width:min(92vw,880px);height:min(92vw,880px);transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(255,255,226,.28),rgba(212,255,0,.16) 30%,rgba(212,255,0,.08) 55%,rgba(57,255,20,.04) 68%,transparent 80%);filter:blur(12px);opacity:var(--spot-opacity,.5);transition:opacity 180ms ease-out}
 @media(max-width:640px){.hero-lightspot{top:29%}}
 @media(prefers-reduced-motion:reduce){.hero-lightspot{transition:none}}
 .hero-tag{
@@ -131,6 +131,14 @@ header{
   -webkit-text-stroke:2px var(--neon-yellow);
   text-shadow:none;
 }
+/* Neon sign: text + glyphs fade to gray when the light is off (broken motel sign). */
+.hero-tag,.hero-title,.hero-title .green,.hero-title .outline{transition:color .3s,text-shadow .3s,-webkit-text-stroke-color .3s}
+.hero-title .hero-st-glyph{transition:filter .3s}
+header.light-off .hero-tag{color:#6E6E6E;text-shadow:none}
+header.light-off .hero-title{color:#6E6E6E;text-shadow:none}
+header.light-off .hero-title .green{color:#6E6E6E;text-shadow:none}
+header.light-off .hero-title .outline{color:transparent;-webkit-text-stroke-color:#6E6E6E}
+header.light-off .hero-title .hero-st-glyph{filter:grayscale(1) brightness(.5)}
 .hero-sub{
   font-size:clamp(1.05rem,2.5vw,1.4rem);
   color:var(--white);max-width:640px;margin:18px auto 8px;
@@ -505,9 +513,9 @@ footer .tagline{font-family:var(--font-tag);color:var(--gray);font-size:.95rem;m
   const spot = document.querySelector('.hero-lightspot');
   if (!spot) return;
   const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const ON = 10000, OFF = 12000, PULSE = 140, GAP = 180, MAX = 0.6;
+  const ON = 10000, OFF = 12000, PULSE = 140, GAP = 180, MAX = 0.45;
   let timer = 0, epoch = performance.now(), cancelled = false;
-  function setLevel(level){spot.style.setProperty('--spot-opacity',String(Math.max(0,Math.min(MAX,level))));}
+  function setLevel(level){const v=Math.max(0,Math.min(MAX,level));spot.style.setProperty('--spot-opacity',String(v));document.querySelector('header').classList.toggle('light-off',v===0);}
   function wait(delay,next){if(cancelled)return;timer=window.setTimeout(function(){if(!cancelled)next();},delay);}
   function flicker(after){let pulse=0;function step(){if(pulse>=4){wait(GAP,after);return;}setLevel(pulse%2===0?MAX*0.5:MAX);pulse+=1;wait(pulse===2?GAP:PULSE,step);}step();}
   function cycle(){setLevel(MAX);wait(Math.max(0,epoch+ON-performance.now()),function(){flicker(function(){setLevel(0);wait(OFF,function(){flicker(function(){epoch=performance.now();cycle();});});});});}
