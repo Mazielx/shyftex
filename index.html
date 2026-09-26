@@ -103,15 +103,10 @@ header{
   background:transparent;
   isolation:isolate;
 }
-/* Faro: soft headlight reflection on the pavement, beams aimed at the wordmark.
-   Box is anchored to the header box (top:0;height:100%) and its width can never
-   exceed the containing block (min(100%,1100px) + max-width:100%), so it can
-   never create horizontal scroll; overflow:clip keeps the blurred beams inside. */
-.hero-lightspot{position:absolute;z-index:-1;pointer-events:none;left:50%;top:0;width:min(100%,1100px);max-width:100%;height:100%;transform:translateX(-50%);overflow:clip;opacity:var(--spot-opacity,.5);background:radial-gradient(ellipse 13% 4.5% at 50% 91%,rgba(255,255,226,.5),rgba(212,255,0,.26) 58%,transparent 78%),radial-gradient(ellipse 33% 9% at 50% 91%,rgba(212,255,0,.32),rgba(212,255,0,.12) 54%,transparent 77%),radial-gradient(ellipse 47% 13% at 50% 90%,rgba(57,255,20,.1),transparent 74%),radial-gradient(ellipse 66% 16% at 50% 97%,rgba(212,255,0,.13),transparent 72%),radial-gradient(ellipse 11% 20% at 50% 68%,rgba(212,255,0,.06),transparent 72%),radial-gradient(ellipse 26% 15% at 50% 36%,rgba(212,255,0,.12),transparent 68%);filter:blur(26px);transition:opacity 180ms ease-out}
-.hero-lightspot::before,.hero-lightspot::after{content:"";position:absolute;left:50%;top:30%;width:18%;height:61%;transform-origin:50% 100%;background:linear-gradient(to top,rgba(212,255,0,.32),rgba(212,255,0,.1) 20%,rgba(212,255,0,.035) 42%,rgba(212,255,0,.025) 80%,transparent 100%);clip-path:polygon(50% 100%,150% 0,-50% 0)}
-.hero-lightspot::before{transform:translateX(-50%) rotate(-7deg)}
-.hero-lightspot::after{transform:translateX(-50%) rotate(7deg)}
-@media(max-width:640px){.hero-lightspot{width:100%;max-width:100%;filter:blur(18px)}.hero-lightspot::before,.hero-lightspot::after{width:60%}.hero-lightspot::before{transform:translateX(-50%) rotate(-5deg)}.hero-lightspot::after{transform:translateX(-50%) rotate(5deg)}}
+/* Faro: circular pool of light behind the hero tag + wordmark.
+   Pure circle (no beams, no bottom pool) centered on the tag/title area. */
+.hero-lightspot{position:absolute;z-index:-1;pointer-events:none;left:50%;top:38%;width:min(92vw,880px);height:min(92vw,880px);transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(255,255,226,.38),rgba(212,255,0,.22) 30%,rgba(212,255,0,.10) 55%,rgba(57,255,20,.05) 68%,transparent 80%);filter:blur(12px);opacity:var(--spot-opacity,.5);transition:opacity 180ms ease-out}
+@media(max-width:640px){.hero-lightspot{top:29%}}
 @media(prefers-reduced-motion:reduce){.hero-lightspot{transition:none}}
 .hero-tag{
   font-family:var(--font-tag);color:var(--pink);font-size:1.3rem;
