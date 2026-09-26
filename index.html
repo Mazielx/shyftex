@@ -28,8 +28,9 @@
   --font-display:'Bungee',cursive;
   --font-tag:'Permanent Marker',cursive;
   --font-body:'Space Grotesk',sans-serif;
-  --glow-yellow:0 0 8px rgba(212,255,0,.9),0 0 24px rgba(212,255,0,.55),0 0 64px rgba(212,255,0,.3);
-  --glow-green:0 0 8px rgba(57,255,20,.9),0 0 24px rgba(57,255,20,.55),0 0 64px rgba(57,255,20,.3);
+  --spot-opacity:1;
+  --glow-yellow:0 0 calc(8px * var(--spot-opacity)) rgba(212,255,0,calc(.9 * var(--spot-opacity))),0 0 calc(24px * var(--spot-opacity)) rgba(212,255,0,calc(.55 * var(--spot-opacity))),0 0 calc(64px * var(--spot-opacity)) rgba(212,255,0,calc(.3 * var(--spot-opacity)));
+  --glow-green:0 0 calc(8px * var(--spot-opacity)) rgba(57,255,20,calc(.9 * var(--spot-opacity))),0 0 calc(24px * var(--spot-opacity)) rgba(57,255,20,calc(.55 * var(--spot-opacity))),0 0 calc(64px * var(--spot-opacity)) rgba(57,255,20,calc(.3 * var(--spot-opacity)));
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -92,8 +93,8 @@ nav{
 .nav-links .nav-cta{
   background:var(--neon-yellow);color:#000;font-weight:700;
   padding:8px 18px;border-radius:6px;text-decoration:none;
-  font-size:.9rem;transition:transform .15s,box-shadow .15s;
-  box-shadow:0 0 16px rgba(212,255,0,.4);
+  font-size:.9rem;transition:transform .15s,box-shadow .3s,background-color .3s;
+  box-shadow:0 0 calc(16px * var(--spot-opacity)) rgba(212,255,0,calc(.4 * var(--spot-opacity)));
 }
 .nav-cta:hover{transform:scale(1.05);box-shadow:var(--glow-yellow)}
 /* ── Hero ── */
@@ -103,15 +104,12 @@ header{
   background:transparent;
   isolation:isolate;
 }
-/* Faro: circular pool of light behind the hero tag + wordmark.
-   Pure circle (no beams, no bottom pool) centered on the tag/title area. */
-.hero-lightspot{position:absolute;z-index:-1;pointer-events:none;left:50%;top:38%;width:min(92vw,880px);height:min(92vw,880px);transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(255,255,226,.28),rgba(212,255,0,.16) 30%,rgba(212,255,0,.08) 55%,rgba(57,255,20,.04) 68%,transparent 80%);filter:blur(12px);opacity:var(--spot-opacity,.5);transition:opacity 180ms ease-out}
-@media(max-width:640px){.hero-lightspot{top:29%}}
-@media(prefers-reduced-motion:reduce){.hero-lightspot{transition:none}}
+/* The light is the neon glow itself: it hugs the hero letters and scales
+   with --spot-opacity (set by the JS cycle). No separate spotlight pool. */
 .hero-tag{
   font-family:var(--font-tag);color:var(--pink);font-size:1.3rem;
   transform:rotate(-3deg);margin-bottom:10px;
-  text-shadow:0 0 12px rgba(255,46,136,.6);
+  text-shadow:0 0 calc(12px * var(--spot-opacity)) rgba(255,46,136,calc(.6 * var(--spot-opacity)));
 }
 .hero-title{
   font-family:var(--font-display);
@@ -133,12 +131,15 @@ header{
 }
 /* Neon sign: text + glyphs fade to gray when the light is off (broken motel sign). */
 .hero-tag,.hero-title,.hero-title .green,.hero-title .outline{transition:color .3s,text-shadow .3s,-webkit-text-stroke-color .3s}
-.hero-title .hero-st-glyph{transition:filter .3s}
-header.light-off .hero-tag{color:#6E6E6E;text-shadow:none}
-header.light-off .hero-title{color:#6E6E6E;text-shadow:none}
-header.light-off .hero-title .green{color:#6E6E6E;text-shadow:none}
-header.light-off .hero-title .outline{color:transparent;-webkit-text-stroke-color:#6E6E6E}
-header.light-off .hero-title .hero-st-glyph{filter:grayscale(1) brightness(.5)}
+.hero-title .hero-st-glyph{transition:color .3s,filter .3s}
+/* Hero S/T: color via currentColor, glow via drop-shadow that scales with the light. */
+.hero-st-s{color:var(--neon-yellow);filter:drop-shadow(0 0 calc(4px * var(--spot-opacity)) rgba(212,255,0,calc(.85 * var(--spot-opacity)))) drop-shadow(0 0 calc(12px * var(--spot-opacity)) rgba(212,255,0,calc(.45 * var(--spot-opacity))))}
+.hero-st-t{color:var(--neon-green);filter:drop-shadow(0 0 calc(4px * var(--spot-opacity)) rgba(57,255,20,calc(.85 * var(--spot-opacity)))) drop-shadow(0 0 calc(12px * var(--spot-opacity)) rgba(57,255,20,calc(.45 * var(--spot-opacity))))}
+body.light-off .hero-tag{color:#6E6E6E;text-shadow:none}
+body.light-off .hero-title{color:#6E6E6E;text-shadow:none}
+body.light-off .hero-title .green{color:#6E6E6E;text-shadow:none}
+body.light-off .hero-title .outline{color:transparent;-webkit-text-stroke-color:#6E6E6E}
+body.light-off .hero-st-s,body.light-off .hero-st-t{color:#6E6E6E}
 .hero-sub{
   font-size:clamp(1.05rem,2.5vw,1.4rem);
   color:var(--white);max-width:640px;margin:18px auto 8px;
@@ -150,7 +151,7 @@ header.light-off .hero-title .hero-st-glyph{filter:grayscale(1) brightness(.5)}
 .btn{
   display:inline-flex;align-items:center;gap:10px;
   padding:16px 34px;border-radius:8px;font-weight:700;font-size:1.05rem;
-  text-decoration:none;transition:transform .15s,box-shadow .15s;
+  text-decoration:none;transition:transform .15s,box-shadow .3s,color .3s,background-color .3s,border-color .3s;
   font-family:var(--font-body);
 }
 .btn-yellow{background:var(--neon-yellow);color:#000;box-shadow:var(--glow-yellow)}
@@ -231,13 +232,13 @@ section{padding:90px 5vw}
   max-width:760px;margin:0 auto;text-align:center;
   background:var(--bg3);border:2px solid rgba(212,255,0,.3);
   border-radius:18px;padding:48px 34px;position:relative;
-  box-shadow:0 0 60px rgba(212,255,0,.08);
+  box-shadow:0 0 calc(60px * var(--spot-opacity)) rgba(212,255,0,calc(.08 * var(--spot-opacity)));
 }
 .download-box::before{
   content:"FREE";position:absolute;top:-16px;right:24px;
   background:var(--neon-yellow);color:#000;font-family:var(--font-display);
   font-size:.85rem;padding:6px 14px;border-radius:6px;transform:rotate(6deg);
-  box-shadow:var(--glow-yellow);
+  box-shadow:var(--glow-yellow);transition:background-color .3s,box-shadow .3s;
 }
 .download-title{
   font-family:var(--font-display);font-size:clamp(1.6rem,4vw,2.2rem);
@@ -250,13 +251,13 @@ section{padding:90px 5vw}
   background:var(--neon-yellow);color:#000;font-weight:700;
   padding:18px 44px;border-radius:10px;text-decoration:none;font-size:1.15rem;
   display:inline-flex;align-items:center;gap:12px;
-  box-shadow:var(--glow-yellow);transition:transform .15s;
+  box-shadow:var(--glow-yellow);transition:transform .15s,box-shadow .3s,background-color .3s;
 }
 .btn-apk:hover{transform:scale(1.05) rotate(-1deg)}
 .btn-pwa{
   background:transparent;color:var(--neon-green);border:2px solid var(--neon-green);
   padding:14px 34px;border-radius:10px;text-decoration:none;font-weight:700;font-size:1rem;
-  display:inline-flex;align-items:center;gap:10px;box-shadow:var(--glow-green);transition:transform .15s;
+  display:inline-flex;align-items:center;gap:10px;box-shadow:var(--glow-green);transition:transform .15s,box-shadow .3s,color .3s,background-color .3s,border-color .3s;
 }
 .btn-pwa:hover{transform:scale(1.05) rotate(1deg);background:rgba(57,255,20,.08)}
 .download-meta{color:var(--gray-dark);font-size:.85rem}
@@ -293,6 +294,37 @@ footer{
 footer .logo{margin-bottom:10px;font-size:1.1rem}
 footer p{color:var(--gray-dark);font-size:.85rem}
 footer .tagline{font-family:var(--font-tag);color:var(--gray);font-size:.95rem;margin-bottom:14px}
+/* ── Light off: every neon element grays out (broken motel sign) ── */
+.section-title .y,.section-title .g,.download-title .y,.proof-card .big,.stores-label,.section-tag,.hero-sub b,.install-steps h4,.step-num,summary::after,details,.download-box,.download-box::before,.logo .st-mark{transition:color .3s,text-shadow .3s,box-shadow .3s,background-color .3s,border-color .3s,filter .3s,-webkit-text-stroke-color .3s}
+body.light-off nav{border-bottom-color:rgba(255,255,255,.12)}
+body.light-off .nav-links a:hover{color:var(--gray);text-shadow:none}
+body.light-off .nav-cta{background:var(--gray-dark);box-shadow:none}
+body.light-off .nav-cta:hover{box-shadow:none}
+body.light-off .btn-yellow{background:var(--gray-dark);box-shadow:none}
+body.light-off .btn-green{color:var(--gray);border-color:var(--gray-dark);box-shadow:none}
+body.light-off .btn-green:hover{background:rgba(255,255,255,.05)}
+body.light-off .stores{border-top-color:rgba(255,255,255,.12);border-bottom-color:rgba(255,255,255,.12)}
+body.light-off .stores-label{color:var(--gray)}
+body.light-off .stores-row span:hover{color:var(--gray);text-shadow:none}
+body.light-off .section-tag{color:var(--gray)}
+body.light-off .section-title .y,body.light-off .section-title .g{color:#6E6E6E;text-shadow:none}
+body.light-off .step:hover{border-color:var(--gray-dark);box-shadow:none}
+body.light-off .step:nth-child(2):hover{border-color:var(--gray-dark);box-shadow:none}
+body.light-off .step-num{-webkit-text-stroke-color:var(--gray-dark)}
+body.light-off .proof{border-top-color:rgba(255,255,255,.12);border-bottom-color:rgba(255,255,255,.12)}
+body.light-off .proof-card .big,body.light-off .proof-card .big.y{color:#6E6E6E;text-shadow:none}
+body.light-off .download-box{border-color:rgba(255,255,255,.12);box-shadow:none}
+body.light-off .download-box::before{background:var(--gray-dark);box-shadow:none}
+body.light-off .download-title .y{color:#6E6E6E;text-shadow:none}
+body.light-off .btn-apk{background:var(--gray-dark);box-shadow:none}
+body.light-off .btn-pwa{color:var(--gray);border-color:var(--gray-dark);box-shadow:none}
+body.light-off .btn-pwa:hover{background:rgba(255,255,255,.05)}
+body.light-off .install-steps h4{color:var(--gray)}
+body.light-off details[open]{border-color:var(--gray-dark)}
+body.light-off summary::after{color:var(--gray)}
+body.light-off details[open] summary::after{color:var(--gray)}
+body.light-off .hero-sub b{color:var(--gray)}
+body.light-off .logo .st-mark{filter:grayscale(1) brightness(.5)}
 /* ── Responsive ── */
 @media(max-width:640px){
   .nav-links a:not(.nav-cta){display:none}
@@ -327,6 +359,16 @@ footer .tagline{font-family:var(--font-tag);color:var(--gray);font-size:.95rem;m
     <symbol id="st-glyph-t" viewBox="0 0 60 64">
       <path class="st-t-fill" d="M5 7 H43 L58 14 L43 21 H37 V57 H21 V21 H5 Z"/>
     </symbol>
+    <!-- Plain variants for the hero: color via currentColor so the light-off
+         state can gray them out without a glow halo. -->
+    <symbol id="st-glyph-s-plain" viewBox="0 0 70 64">
+      <path d="M25 49 C29 55 41 54 50 47 C60 39 55 30 40 29 C26 28 15 27 13 19 C11 11 22 6 34 8 C43 10 50 13 53 13" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path d="M69 7 L46 6 L53 13 L58 26 Z" fill="currentColor"/>
+      <path d="M7 59 L21 41 L25 49 L30 57 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="st-glyph-t-plain" viewBox="0 0 60 64">
+      <path d="M5 7 H43 L58 14 L43 21 H37 V57 H21 V21 H5 Z" fill="currentColor"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -349,11 +391,10 @@ footer .tagline{font-family:var(--font-tag);color:var(--gray);font-size:.95rem;m
 
 <!-- ═══ HERO ═══ -->
 <header>
-  <div class="hero-lightspot" aria-hidden="true"></div>
   <span class="hero-tag">tu despensa, optimizada ✦</span>
   <h1 class="hero-title">
-    <svg class="hero-st-glyph hero-st-s" viewBox="0 0 70 64" aria-hidden="true" focusable="false"><use href="#st-glyph-s"/></svg>HYF
-    <svg class="hero-st-glyph hero-st-t" viewBox="0 0 60 64" aria-hidden="true" focusable="false"><use href="#st-glyph-t"/></svg>EX<br><span class="outline">AHORRA</span>
+    <svg class="hero-st-glyph hero-st-s" viewBox="0 0 70 64" aria-hidden="true" focusable="false"><use href="#st-glyph-s-plain"/></svg>HYF
+    <svg class="hero-st-glyph hero-st-t" viewBox="0 0 60 64" aria-hidden="true" focusable="false"><use href="#st-glyph-t-plain"/></svg>EX<br><span class="outline">AHORRA</span>
   </h1>
   <p class="hero-sub">Escanea tu lista. Compara precios en <b>Walmart</b>, <b>Soriana</b>, <b>Costco</b> y más. <b>Optimiza tu ruta</b> de compra.</p>
   <p class="hero-desc">SHYFTEX encuentra dónde comprar cada producto al mejor precio y te arma la ruta más eficiente. Menos tiempo, menos gasto, más despensa.</p>
@@ -508,14 +549,15 @@ footer .tagline{font-family:var(--font-tag);color:var(--gray);font-size:.95rem;m
   <p>© 2026 SHYFTEX · Todos los derechos reservados.</p>
 </footer>
 <script>
-/* Soft headlight reflection; monotonic recursive timeouts avoid interval drift. */
+/* Neon sign: --spot-opacity scales every glow on the page; when it hits 0
+   the whole sign grays out (broken motel). Monotonic recursive timeouts
+   avoid interval drift. */
 (function(){
-  const spot = document.querySelector('.hero-lightspot');
-  if (!spot) return;
+  const root = document.documentElement;
   const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const ON = 10000, OFF = 12000, PULSE = 140, GAP = 180, MAX = 0.45;
+  const ON = 10000, OFF = 12000, PULSE = 140, GAP = 180, MAX = 1;
   let timer = 0, epoch = performance.now(), cancelled = false;
-  function setLevel(level){const v=Math.max(0,Math.min(MAX,level));spot.style.setProperty('--spot-opacity',String(v));document.querySelector('header').classList.toggle('light-off',v===0);}
+  function setLevel(level){const v=Math.max(0,Math.min(MAX,level));root.style.setProperty('--spot-opacity',String(v));document.body.classList.toggle('light-off',v===0);}
   function wait(delay,next){if(cancelled)return;timer=window.setTimeout(function(){if(!cancelled)next();},delay);}
   function flicker(after){let pulse=0;function step(){if(pulse>=4){wait(GAP,after);return;}setLevel(pulse%2===0?MAX*0.5:MAX);pulse+=1;wait(pulse===2?GAP:PULSE,step);}step();}
   function cycle(){setLevel(MAX);wait(Math.max(0,epoch+ON-performance.now()),function(){flicker(function(){setLevel(0);wait(OFF,function(){flicker(function(){epoch=performance.now();cycle();});});});});}
