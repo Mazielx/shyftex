@@ -555,7 +555,7 @@ body.light-off .logo .st-mark{filter:grayscale(1) brightness(.5)}
 (function(){
   const root = document.documentElement;
   const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const ON = 10000, OFF = 4000, PULSE = 140, GAP = 180, MAX = 1;
+  const ON = 10000, OFF = 2000, PULSE = 140, GAP = 180, MAX = 1;
   let timer = 0, epoch = performance.now(), cancelled = false;
   function setLevel(level){const v=Math.max(0,Math.min(MAX,level));root.style.setProperty('--spot-opacity',String(v));document.body.classList.toggle('light-off',v===0);}
   function wait(delay,next){if(cancelled)return;timer=window.setTimeout(function(){if(!cancelled)next();},delay);}
