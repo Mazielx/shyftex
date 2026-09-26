@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import {
@@ -13,6 +13,7 @@ import {
 } from '../../config/theme';
 import { useOptimizationStore } from '../../stores/AppStore';
 import { ShoppingPlan } from '../../domain/entities/ShoppingPlan';
+import { LocalizedText as Text } from '../../components/LocalizedText';
 
 const MODE_CONFIG: Record<
   string,

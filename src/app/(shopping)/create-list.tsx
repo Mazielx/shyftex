@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -13,8 +12,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { colors, spacing, borderRadius, shadows, typography } from '../../config/theme';
 import { useListStore } from '../../stores/AppStore';
+import { LocalizedText as Text } from '../../components/LocalizedText';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function CreateListScreen() {
+  const { t } = useLanguage();
   const [inputText, setInputText] = useState('');
   const { parseList, isProcessing } = useListStore();
 
@@ -43,7 +45,7 @@ export default function CreateListScreen() {
           <TextInput
             style={styles.textInput}
             multiline
-            placeholder="Ej: 2 litros de leche Lala, huevos, arroz, cereal Zucaritas, pechuga de pollo, Ariel y papel Regio"
+            placeholder={t('Ej: 2 litros de leche Lala, huevos, arroz, cereal Zucaritas, pechuga de pollo, Ariel y papel Regio')}
             placeholderTextColor={colors.textTertiary}
             value={inputText}
             onChangeText={setInputText}

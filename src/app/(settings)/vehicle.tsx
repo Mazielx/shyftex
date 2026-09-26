@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -13,10 +12,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { colors, spacing, borderRadius, shadows, typography } from '../../config/theme';
 import { useSettingsStore } from '../../stores/AppStore';
+import { LocalizedText as Text } from '../../components/LocalizedText';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const FUEL_TYPES = ['Magna', 'Premium', 'Diesel', 'Diesel Premium'];
 
 export default function VehicleScreen() {
+  const { t } = useLanguage();
   const { vehicle, syncVehicle } = useSettingsStore();
   const [make, setMake] = useState(vehicle?.make ?? '');
   const [model, setModel] = useState(vehicle?.model ?? '');
@@ -26,7 +28,7 @@ export default function VehicleScreen() {
 
   const handleSave = () => {
     if (!make.trim() || !model.trim()) {
-      Alert.alert('Error', 'Por favor ingresa marca y modelo');
+      Alert.alert(t('Error'), t('Por favor ingresa marca y modelo'));
       return;
     }
 
@@ -39,7 +41,7 @@ export default function VehicleScreen() {
       customEfficiency: efficiency ? parseFloat(efficiency) : null,
     });
 
-    Alert.alert('Guardado', 'Información del vehículo actualizada', [
+    Alert.alert(t('Guardado'), t('Información del vehículo actualizada'), [
       { text: 'OK', onPress: () => router.back() },
     ]);
   };
@@ -63,7 +65,7 @@ export default function VehicleScreen() {
           <Text style={styles.label}>Marca *</Text>
           <TextInput
             style={styles.input}
-            placeholder="Ej: Nissan, Toyota, Chevrolet"
+            placeholder={t('Ej: Nissan, Toyota, Chevrolet')}
             placeholderTextColor={colors.textTertiary}
             value={make}
             onChangeText={setMake}
@@ -74,7 +76,7 @@ export default function VehicleScreen() {
           <Text style={styles.label}>Modelo *</Text>
           <TextInput
             style={styles.input}
-            placeholder="Ej: Versa, Corolla, Aveo"
+            placeholder={t('Ej: Versa, Corolla, Aveo')}
             placeholderTextColor={colors.textTertiary}
             value={model}
             onChangeText={setModel}
@@ -85,7 +87,7 @@ export default function VehicleScreen() {
           <Text style={styles.label}>Año</Text>
           <TextInput
             style={styles.input}
-            placeholder="Ej: 2023"
+            placeholder={t('Ej: 2023')}
             placeholderTextColor={colors.textTertiary}
             value={year}
             onChangeText={setYear}
@@ -114,7 +116,7 @@ export default function VehicleScreen() {
           <Text style={styles.label}>Consumo personalizado (km/L)</Text>
           <TextInput
             style={styles.input}
-            placeholder="Ej: 13"
+            placeholder={t('Ej: 13')}
             placeholderTextColor={colors.textTertiary}
             value={efficiency}
             onChangeText={setEfficiency}

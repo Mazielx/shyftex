@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
@@ -13,6 +12,8 @@ import { router } from 'expo-router';
 import { colors, spacing, borderRadius, shadows, typography, commonStyles } from '../../config/theme';
 import { useAuthStore, useSettingsStore } from '../../stores/AppStore';
 import { useLocation } from '../../hooks/useLocation';
+import { LocalizedText as Text } from '../../components/LocalizedText';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const ICON_BG_SIZE = 34;
 
@@ -64,15 +65,16 @@ function SettingsGroup({ children }: { children: React.ReactNode }) {
 }
 
 export default function ProfileScreen() {
+  const { t } = useLanguage();
   const { user, logout } = useAuthStore();
   const settings = useSettingsStore();
   const { location, hasPermission, refreshLocation } = useLocation();
 
   const handleLogout = () => {
-    Alert.alert('Cerrar sesión', '¿Estás seguro de que quieres cerrar sesión?', [
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert(t('Cerrar sesión'), t('¿Estás seguro de que quieres cerrar sesión?'), [
+      { text: t('Cancelar'), style: 'cancel' },
       {
-        text: 'Cerrar sesión',
+        text: t('Cerrar sesión'),
         style: 'destructive',
         onPress: () => {
           logout();

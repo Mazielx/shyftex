@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { colors, spacing, borderRadius, shadows, typography, formatCurrency } from '../../config/theme';
 import { useOptimizationStore, useMissionStore } from '../../stores/AppStore';
 import { ShoppingPlan, PlanConfidence } from '../../domain/entities/ShoppingPlan';
+import { LocalizedText as Text } from '../../components/LocalizedText';
 
 export default function PlanResultsScreen() {
   const { plans, selectedPlan, selectPlan } = useOptimizationStore();

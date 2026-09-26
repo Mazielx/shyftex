@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "Shopping Optimizer",
-    "slug": "shopping-optimizer",
+    "name": "SHYFTEX",
+    "slug": "shyftex",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "shopping-optimizer",
+    "scheme": "shyftex",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.shoppingoptimizer.app",
+      "bundleIdentifier": "com.shyftex.app",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "SHYFTEX necesita tu ubicacion para encontrar tiendas cercanas y optimizar tus rutas de compra."
       }
@@ -21,7 +21,8 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.shoppingoptimizer.app",
+      "package": "com.shyftex.app",
+      "versionCode": 1,
       "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
       "predictiveBackGestureEnabled": false
     },

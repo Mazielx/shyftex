@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { colors, spacing, borderRadius, shadows, typography, formatCurrency } from '../../config/theme';
@@ -8,6 +8,8 @@ import { Product } from '../../domain/entities/Product';
 import { Promotion, PromotionType } from '../../domain/entities/Promotion';
 import { Price } from '../../domain/entities/Price';
 import { Money } from '../../domain/valueObjects/Money';
+import { LocalizedText as Text } from '../../components/LocalizedText';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const SERVICE_CONFIG: Record<
   StoreService,
@@ -53,6 +55,7 @@ export default function StoreDetailScreen({
   promotions = [],
   onAddToRoute,
 }: StoreDetailScreenProps): React.JSX.Element {
+  const { t } = useLanguage();
   if (!store) {
     return (
       <SafeAreaView style={styles.container}>
@@ -175,7 +178,7 @@ export default function StoreDetailScreen({
             ))}
           </View>
           {todayHours && !todayHours.isClosed && (
-            <Text style={styles.todayNote}>Hoy cierra a las {todayHours.closeTime}</Text>
+            <Text style={styles.todayNote}>{t('Hoy cierra a las {closeTime}', { closeTime: todayHours.closeTime })}</Text>
           )}
         </View>
 

@@ -4,6 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import { colors } from '../config/theme';
 import { useAuthStore } from '../stores/AppStore';
 import { useLocation } from '../hooks/useLocation';
+import { LanguageProvider } from '../i18n/LanguageContext';
+import { LanguageToggle } from '../components/LanguageToggle';
 
 /**
  * Initializes location tracking after authentication.
@@ -28,26 +30,29 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <>
-      <StatusBar style="dark" />
-      <LocationInitializer />
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: colors.surface },
-          headerTintColor: colors.textPrimary,
-          headerTitleStyle: {
-            fontWeight: '600',
-            color: colors.textPrimary,
-          },
-          contentStyle: { backgroundColor: colors.background },
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(shopping)" options={{ headerShown: false }} />
-        <Stack.Screen name="(mission)" options={{ headerShown: false }} />
-        <Stack.Screen name="(settings)" options={{ headerShown: false }} />
-      </Stack>
-    </>
+    <LanguageProvider>
+      <>
+        <StatusBar style="dark" />
+        <LocationInitializer />
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: colors.surface },
+            headerTintColor: colors.textPrimary,
+            headerTitleStyle: {
+              fontWeight: '600',
+              color: colors.textPrimary,
+            },
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(shopping)" options={{ headerShown: false }} />
+          <Stack.Screen name="(mission)" options={{ headerShown: false }} />
+          <Stack.Screen name="(settings)" options={{ headerShown: false }} />
+        </Stack>
+        <LanguageToggle />
+      </>
+    </LanguageProvider>
   );
 }

@@ -17,9 +17,10 @@ import {
 import { OptimizationEngine, OptimizationInput } from '../optimization/OptimizationEngine';
 import { MockRetailDataProvider } from '../infrastructure/providers/MockRetailDataProvider';
 import { ShoppingItem } from '../domain/entities/ShoppingItem';
-import { ShoppingPlan, PlanConfidence } from '../domain/entities/ShoppingPlan';
+import { ShoppingPlan } from '../domain/entities/ShoppingPlan';
 import { Money } from '../domain/valueObjects/Money';
 import { optimizeApi, ApiError } from '../infrastructure/api/apiClient';
+import { toShoppingPlan } from '../infrastructure/api/planAdapter';
 
 const retailDataProvider = new MockRetailDataProvider();
 const optimizationEngine = new OptimizationEngine();
@@ -100,8 +101,13 @@ export function useOptimization(): UseOptimizationReturn {
               userLocation,
             );
 
-            // Import the mapper from AppStore — we'll duplicate the key mapping here
-            const plan = mapBackendPlan(result, currentList.id, optimizationMode);
+            // Normalize the backend's pesos-based payload (estimatedPrice /
+            // storeName) into the integer cents contract the domain expects.
+            const plan = toShoppingPlan(result, {
+              listId: currentList.id,
+              mode: optimizationMode,
+              userLocation,
+            });
 
             useOptimizationStore.setState({
               plans: [plan],
@@ -270,107 +276,4 @@ export function useOptimization(): UseOptimizationReturn {
     selectPlan,
     reset,
   };
-}
-
-// ─── Local helper: Map backend plan result to ShoppingPlan entity ───
-
-function mapBackendPlan(
-  result: import('../infrastructure/api/apiClient').BackendPlanResult,
-  listId: string,
-  mode: import('../domain/entities/ShoppingPlan').OptimizationMode,
-): ShoppingPlan {
-  return new ShoppingPlan({
-    id: result.planId,
-    userId: '',
-    listId,
-    mode,
-    totalProductCost: Money.fromCents(result.summary.totalProductCostCents),
-    totalTransportCost: Money.fromCents(result.summary.totalTransportCostCents),
-    totalTimeMinutes: result.summary.estimatedTimeMinutes,
-    totalDistanceKm: result.summary.totalDistanceKm,
-    effectiveTotalCost: Money.fromCents(result.summary.effectiveCostCents),
-    estimatedSavings:
-      result.summary.savingsCents > 0 ? Money.fromCents(result.summary.savingsCents) : null,
-    baselineCost:
-      result.summary.baselineCents > 0 ? Money.fromCents(result.summary.baselineCents) : null,
-    baselineDescription: null,
-    confidence: (result.summary.confidence as PlanConfidence) || PlanConfidence.MEDIUM,
-    storeStops: result.stores.map(
-      (store: import('../infrastructure/api/apiClient').BackendPlanResult['stores'][0]) => ({
-        storeId: store.storeId,
-        storeName: store.storeName,
-        retailerName: store.retailerName,
-        address: store.address,
-        latitude: store.latitude,
-        longitude: store.longitude,
-        productCost: Money.fromCents(store.productCostCents),
-        transportCost: Money.fromCents(store.transportCostCents),
-        items: store.items.map(
-          (item: import('../infrastructure/api/apiClient').BackendPlanResult['stores'][0]['items'][0]) => ({
-            shoppingItemId: item.itemId,
-            productId: item.itemId,
-            productName: item.name,
-            brand: '',
-            quantity: item.quantity,
-            unit: item.unit,
-            originalPrice: Money.fromCents(item.unitPriceCents),
-            effectivePrice: Money.fromCents(item.lineTotalCents),
-            savings: Money.zero(),
-            matchLevel: 'EXACT_MATCH',
-            isSubstitution: false,
-            substituteForProductId: null,
-          }),
-        ),
-        promotions: store.promos.map((promo: string) => ({
-          promotionId: promo,
-          name: promo,
-          type: 'DISCOUNT',
-          savings: Money.zero(),
-          requiredMembership: false,
-          requiredCard: false,
-        })),
-      }),
-    ),
-    route: [
-      {
-        order: 0,
-        type: 'HOME' as const,
-        storeId: null,
-        storeName: null,
-        latitude: 19.4326,
-        longitude: -99.1332,
-        address: 'Home',
-        estimatedArrivalMinutes: 0,
-        distanceFromPreviousKm: 0,
-      },
-      ...result.stores.map(
-        (
-          store: import('../infrastructure/api/apiClient').BackendPlanResult['stores'][0],
-          i: number,
-        ) => ({
-          order: i + 1,
-          type: 'STORE' as const,
-          storeId: store.storeId,
-          storeName: store.storeName,
-          latitude: store.latitude,
-          longitude: store.longitude,
-          address: store.address,
-          estimatedArrivalMinutes: Math.round(store.distanceKm * 3),
-          distanceFromPreviousKm: store.distanceKm,
-        }),
-      ),
-    ],
-    assumptions: ['Prices from backend. May vary.'],
-    warnings: result.warnings,
-    explanations: [
-      {
-        category: 'CHOICE' as const,
-        text: `Optimized across ${result.summary.storesCount} store(s).`,
-        details: null,
-      },
-    ],
-    isMock: result.isMock,
-    createdAt: new Date(),
-    expiresAt: new Date(Date.now() + 30 * 60 * 1000),
-  });
 }

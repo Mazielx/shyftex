@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
@@ -24,8 +23,11 @@ import {
 } from '../../config/theme';
 import { useMissionStore } from '../../stores/AppStore';
 import { MissionItemStatus } from '../../domain/entities/ShoppingMission';
+import { LocalizedText as Text } from '../../components/LocalizedText';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function ShoppingMissionScreen() {
+  const { t } = useLanguage();
   const { currentMission, markItem, completeMission, cancelMission } = useMissionStore();
   const [activeTab, setActiveTab] = useState<'checklist' | 'map'>('checklist');
   const [priceModalVisible, setPriceModalVisible] = useState(false);
@@ -109,10 +111,10 @@ export default function ShoppingMissionScreen() {
         <TouchableOpacity
           style={styles.cancelButton}
           onPress={() => {
-            Alert.alert('Cancelar compra', '¿Estás seguro de que quieres cancelar?', [
-              { text: 'No', style: 'cancel' },
+            Alert.alert(t('Cancelar compra'), t('¿Estás seguro de que quieres cancelar?'), [
+              { text: t('No'), style: 'cancel' },
               {
-                text: 'Sí, cancelar',
+                text: t('Sí, cancelar'),
                 style: 'destructive',
                 onPress: () => {
                   cancelMission();
@@ -178,10 +180,10 @@ export default function ShoppingMissionScreen() {
                     openPriceModal(item.id, item.productName);
                   }}
                   onNotFound={() => {
-                    Alert.alert('Producto no encontrado', `¿Qué hacer con "${item.productName}"?`, [
-                      { text: 'Cancelar', style: 'cancel' },
+                    Alert.alert(t('Producto no encontrado'), `${t('¿Qué hacer con')} "${item.productName}"?`, [
+                      { text: t('Cancelar'), style: 'cancel' },
                       {
-                        text: 'Marcar como no encontrado',
+                        text: t('Marcar como no encontrado'),
                         onPress: () => markItem(item.id, MissionItemStatus.NOT_FOUND),
                       },
                     ]);
@@ -276,9 +278,9 @@ export default function ShoppingMissionScreen() {
             style={styles.completeButton}
             onPress={() => {
               completeMission();
-              Alert.alert('¡Compra completada!', `Total gastado: ${formatCurrency(totalSpent)}`, [
+              Alert.alert(t('¡Compra completada!'), `${t('Total gastado')}: ${formatCurrency(totalSpent)}`, [
                 {
-                  text: 'Ver resumen',
+                  text: t('Ver resumen'),
                   onPress: () => router.replace('/(tabs)'),
                 },
               ]);

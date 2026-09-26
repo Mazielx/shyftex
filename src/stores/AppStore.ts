@@ -14,7 +14,7 @@ import {
   MatchLevel,
 } from '../domain/entities/ShoppingItem';
 import { ShoppingList, ShoppingListStatus } from '../domain/entities/ShoppingList';
-import { ShoppingPlan, OptimizationMode, PlanConfidence } from '../domain/entities/ShoppingPlan';
+import { ShoppingPlan, OptimizationMode } from '../domain/entities/ShoppingPlan';
 import {
   ShoppingMission,
   MissionStatus,
@@ -34,13 +34,13 @@ import {
   tokenStore,
   ApiError,
   type BackendParseResult,
-  type BackendPlanResult,
   type BackendMission,
   type BackendMissionItem,
   type BackendVehicle,
   type BackendPreferences,
   type StoredUser,
 } from '../infrastructure/api/apiClient';
+import { toShoppingPlan } from '../infrastructure/api/planAdapter';
 import { v4 as uuidv4 } from 'uuid';
 
 // ─── Singleton Providers ───
@@ -87,95 +87,11 @@ function mapBackendItemsToList(
   );
 }
 
-// ─── Helper: Map BackendPlanResult to ShoppingPlan entity ───
-
-function mapBackendPlanToEntity(result: BackendPlanResult, listId: string): ShoppingPlan {
-  return new ShoppingPlan({
-    id: result.planId,
-    userId: '',
-    listId,
-    mode: OptimizationMode.BALANCED,
-    totalProductCost: Money.fromCents(result.summary.totalProductCostCents),
-    totalTransportCost: Money.fromCents(result.summary.totalTransportCostCents),
-    totalTimeMinutes: result.summary.estimatedTimeMinutes,
-    totalDistanceKm: result.summary.totalDistanceKm,
-    effectiveTotalCost: Money.fromCents(result.summary.effectiveCostCents),
-    estimatedSavings:
-      result.summary.savingsCents > 0 ? Money.fromCents(result.summary.savingsCents) : null,
-    baselineCost:
-      result.summary.baselineCents > 0 ? Money.fromCents(result.summary.baselineCents) : null,
-    baselineDescription: null,
-    confidence: (result.summary.confidence as PlanConfidence) || PlanConfidence.MEDIUM,
-    storeStops: result.stores.map((store) => ({
-      storeId: store.storeId,
-      storeName: store.storeName,
-      retailerName: store.retailerName,
-      address: store.address,
-      latitude: store.latitude,
-      longitude: store.longitude,
-      productCost: Money.fromCents(store.productCostCents),
-      transportCost: Money.fromCents(store.transportCostCents),
-      items: store.items.map((item) => ({
-        shoppingItemId: item.itemId,
-        productId: item.itemId,
-        productName: item.name,
-        brand: '',
-        quantity: item.quantity,
-        unit: item.unit,
-        originalPrice: Money.fromCents(item.unitPriceCents),
-        effectivePrice: Money.fromCents(item.lineTotalCents),
-        savings: Money.zero(),
-        matchLevel: MatchLevel.EXACT_MATCH,
-        isSubstitution: false,
-        substituteForProductId: null,
-      })),
-      promotions: store.promos.map((promo) => ({
-        promotionId: promo,
-        name: promo,
-        type: 'DISCOUNT',
-        savings: Money.zero(),
-        requiredMembership: false,
-        requiredCard: false,
-      })),
-    })),
-    route: [
-      {
-        order: 0,
-        type: 'HOME' as const,
-        storeId: null,
-        storeName: null,
-        latitude: CDMX_DEFAULT_LOCATION.latitude,
-        longitude: CDMX_DEFAULT_LOCATION.longitude,
-        address: 'Home',
-        estimatedArrivalMinutes: 0,
-        distanceFromPreviousKm: 0,
-      },
-      ...result.stores.map((store, i) => ({
-        order: i + 1,
-        type: 'STORE' as const,
-        storeId: store.storeId,
-        storeName: store.storeName,
-        latitude: store.latitude,
-        longitude: store.longitude,
-        address: store.address,
-        estimatedArrivalMinutes: Math.round(store.distanceKm * 3),
-        distanceFromPreviousKm: store.distanceKm,
-      })),
-    ],
-    assumptions: ['Prices from backend. May vary.'],
-    warnings: result.warnings,
-    explanations: [
-      {
-        category: 'CHOICE' as const,
-        text: `Optimized across ${result.summary.storesCount} store(s).`,
-        details: null,
-      },
-    ],
-    isMock: result.isMock,
-    createdAt: new Date(),
-    expiresAt: new Date(Date.now() + 30 * 60 * 1000),
-  });
-}
+// ─── Helper: Map the raw backend plan payload to a ShoppingPlan entity ───
+//
+// Delegates to the shared adapter, which normalizes the backend's pesos-based
+// wire format (estimatedPrice / estimatedTotal / storeName) into the integer
+// cents contract the domain expects. See src/infrastructure/api/planAdapter.ts.
 
 // ─── Helper: Map BackendMission to ShoppingMission entity ───
 
@@ -652,7 +568,11 @@ export const useOptimizationStore = create<OptimizationState>()((set, get) => ({
       // Try backend optimization first
       try {
         const result = await optimizeApi.run(listId, state.optimizationMode, userLocation);
-        const plan = mapBackendPlanToEntity(result, listId);
+        const plan = toShoppingPlan(result, {
+          listId,
+          mode: state.optimizationMode,
+          userLocation,
+        });
         set({
           plans: [plan],
           selectedPlan: plan,

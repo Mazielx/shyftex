@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
@@ -16,6 +15,8 @@ import { colors, spacing, borderRadius, shadows, typography } from '../../config
 import { useListStore, useOptimizationStore } from '../../stores/AppStore';
 import { ShoppingItem, ItemPriority, MatchLevel } from '../../domain/entities/ShoppingItem';
 import { ShoppingListStatus } from '../../domain/entities/ShoppingList';
+import { LocalizedText as Text } from '../../components/LocalizedText';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const STATUS_CONFIG: Record<ShoppingListStatus, { label: string; color: string; bgColor: string }> =
   {
@@ -68,6 +69,7 @@ const MATCH_COLORS: Record<MatchLevel, string> = {
 };
 
 export default function ListDetailScreen() {
+  const { t } = useLanguage();
   const { currentList, items, updateItem, removeItem } = useListStore();
   const { generatePlans, isOptimizing } = useOptimizationStore();
   const [editingItem, setEditingItem] = useState<ShoppingItem | null>(null);
@@ -235,7 +237,7 @@ export default function ListDetailScreen() {
               style={styles.modalInput}
               value={editBrand}
               onChangeText={setEditBrand}
-              placeholder="Ej: Lala"
+              placeholder={t('Ej: Lala')}
             />
 
             <Text style={styles.modalInputLabel}>Notas</Text>
@@ -244,7 +246,7 @@ export default function ListDetailScreen() {
               value={editNotes}
               onChangeText={setEditNotes}
               multiline
-              placeholder="Ej: sin azúcar"
+              placeholder={t('Ej: sin azúcar')}
             />
 
             <View style={styles.modalActions}>

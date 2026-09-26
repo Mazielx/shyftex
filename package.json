@@ -1,5 +1,5 @@
 {
-  "name": "shopping-optimizer",
+  "name": "shyftex",
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
@@ -15,11 +15,13 @@
     "expo-secure-store": "~57.0.1",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
+    "react-dom": "^19.2.3",
     "react-native": "0.86.2",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
+    "react-native-web": "^0.21.2",
     "uuid": "^11.1.0",
     "zustand": "^5.0.5"
   },

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -15,8 +14,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { colors, spacing, borderRadius, shadows, typography } from '../../config/theme';
 import { useAuthStore } from '../../stores/AppStore';
+import { useLanguage } from '../../i18n/LanguageContext';
+import { LocalizedText as Text } from '../../components/LocalizedText';
 
 export default function RegisterScreen() {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,11 +30,11 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Completa todos los campos');
+      Alert.alert(t('Error'), t('Completa todos los campos'));
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Error', 'La contrasena debe tener al menos 6 caracteres');
+      Alert.alert(t('Error'), t('La contrasena debe tener al menos 6 caracteres'));
       return;
     }
     try {
@@ -64,8 +66,8 @@ export default function RegisterScreen() {
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Crear cuenta</Text>
-            <Text style={styles.subtitle}>Empieza a ahorrar en tus compras</Text>
+            <Text style={styles.title}>{t('Crear cuenta')}</Text>
+            <Text style={styles.subtitle}>{t('Empieza a ahorrar en tus compras')}</Text>
           </View>
 
           {/* Form */}
@@ -78,7 +80,7 @@ export default function RegisterScreen() {
               />
               <TextInput
                 style={styles.inputField}
-                placeholder="Tu nombre"
+                placeholder={t('Tu nombre')}
                 placeholderTextColor={colors.textTertiary}
                 value={name}
                 onChangeText={setName}
@@ -115,7 +117,7 @@ export default function RegisterScreen() {
               />
               <TextInput
                 style={styles.inputField}
-                placeholder="Minimo 6 caracteres"
+                placeholder={t('Minimo 6 caracteres')}
                 placeholderTextColor={colors.textTertiary}
                 value={password}
                 onChangeText={setPassword}
@@ -151,7 +153,7 @@ export default function RegisterScreen() {
               {isLoading ? (
                 <ActivityIndicator color={colors.white} size="small" />
               ) : (
-                <Text style={styles.registerBtnText}>Crear cuenta</Text>
+                <Text style={styles.registerBtnText}>{t('Crear cuenta')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -160,8 +162,8 @@ export default function RegisterScreen() {
           <View style={styles.footer}>
             <TouchableOpacity onPress={() => router.back()}>
               <Text style={styles.footerText}>
-                Ya tienes cuenta?{' '}
-                <Text style={styles.footerLink}>Inicia sesion</Text>
+                {t('Ya tienes cuenta? ')}
+                <Text style={styles.footerLink}>{t('Inicia sesion')}</Text>
               </Text>
             </TouchableOpacity>
           </View>

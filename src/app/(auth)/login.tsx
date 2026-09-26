@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -15,8 +14,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { colors, spacing, borderRadius, shadows, typography } from '../../config/theme';
 import { useAuthStore } from '../../stores/AppStore';
+import { useLanguage } from '../../i18n/LanguageContext';
+import { LocalizedText as Text } from '../../components/LocalizedText';
 
 export default function LoginScreen() {
+  const { language, t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -26,7 +28,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Por favor ingresa email y contrasena');
+      Alert.alert(t('Error'), t('Por favor ingresa email y contrasena'));
       return;
     }
     try {
@@ -64,16 +66,14 @@ export default function LoginScreen() {
               <Ionicons name="cart" size={32} color={colors.white} />
             </View>
             <Text style={styles.brandName}>SHYFTEX</Text>
-            <Text style={styles.brandTagline}>Compra inteligente, precios reales</Text>
+            <Text style={styles.brandTagline}>{t('Compra inteligente, precios reales')}</Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
-            <Text style={styles.formTitle}>Iniciar sesion</Text>
+            <Text style={styles.formTitle}>{t('Iniciar sesion')}</Text>
 
-            <View
-              style={[styles.inputRow, emailFocused && styles.inputRowFocused]}
-            >
+            <View style={[styles.inputRow, emailFocused && styles.inputRowFocused]}>
               <Ionicons
                 name="mail-outline"
                 size={18}
@@ -93,9 +93,7 @@ export default function LoginScreen() {
               />
             </View>
 
-            <View
-              style={[styles.inputRow, passwordFocused && styles.inputRowFocused]}
-            >
+            <View style={[styles.inputRow, passwordFocused && styles.inputRowFocused]}>
               <Ionicons
                 name="lock-closed-outline"
                 size={18}
@@ -103,7 +101,7 @@ export default function LoginScreen() {
               />
               <TextInput
                 style={styles.inputField}
-                placeholder="Contrasena"
+                placeholder={language === 'en' ? 'Password' : 'Contrasena'}
                 placeholderTextColor={colors.textTertiary}
                 value={password}
                 onChangeText={setPassword}
@@ -139,7 +137,7 @@ export default function LoginScreen() {
               {isLoading ? (
                 <ActivityIndicator color={colors.white} size="small" />
               ) : (
-                <Text style={styles.loginBtnText}>Continuar</Text>
+                <Text style={styles.loginBtnText}>{t('Continuar')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -148,20 +146,16 @@ export default function LoginScreen() {
           <View style={styles.footer}>
             <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
               <Text style={styles.footerText}>
-                No tienes cuenta?{' '}
-                <Text style={styles.footerLink}>Registrate</Text>
+                {t('No tienes cuenta? ')}
+                <Text style={styles.footerLink}>{t('Registrate')}</Text>
               </Text>
             </TouchableOpacity>
           </View>
 
           {/* Demo */}
-          <TouchableOpacity
-            style={styles.demoBtn}
-            onPress={handleDemo}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={styles.demoBtn} onPress={handleDemo} activeOpacity={0.7}>
             <Ionicons name="play-circle-outline" size={16} color={colors.textSecondary} />
-            <Text style={styles.demoBtnText}>Probar sin cuenta</Text>
+            <Text style={styles.demoBtnText}>{t('Probar sin cuenta')}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

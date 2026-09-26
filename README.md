@@ -1,4 +1,4 @@
-# Shopping Optimizer
+# SHYFTEX
 
 An intelligent mobile application that transforms a shopping list into the optimal purchasing strategy.
 

@@ -1,6 +1,6 @@
 /**
  * Formatting utilities.
- * All display formatting for the Shopping Optimizer app.
+ * All display formatting for the SHYFTEX app.
  */
 
 /**

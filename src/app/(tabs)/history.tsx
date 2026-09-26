@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
@@ -20,6 +19,8 @@ import {
 } from '../../config/theme';
 import { useListStore, useOptimizationStore } from '../../stores/AppStore';
 import { ShoppingListStatus } from '../../domain/entities/ShoppingList';
+import { LocalizedText as Text } from '../../components/LocalizedText';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface HistoryStats {
   totalLists: number;
@@ -68,6 +69,7 @@ const PLAN_MODE_LABELS: Record<string, { label: string; icon: string }> = {
 };
 
 export default function HistoryScreen() {
+  const { t } = useLanguage();
   const { lists } = useListStore();
   const { plans } = useOptimizationStore();
 
@@ -142,13 +144,13 @@ export default function HistoryScreen() {
                 <StatCard
                   icon="list-outline"
                   value={stats.totalLists}
-                  label="Listas"
+                  label={t('Listas')}
                   color={colors.primary}
                 />
                 <StatCard
                   icon="map-outline"
                   value={stats.totalPlans}
-                  label="Planes"
+                  label={t('Planes')}
                   color={colors.secondary}
                 />
               </View>

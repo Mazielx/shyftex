@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import {
@@ -11,8 +11,11 @@ import {
   formatCurrency,
 } from '../../config/theme';
 import { useListStore, useOptimizationStore, useAuthStore } from '../../stores/AppStore';
+import { useLanguage } from '../../i18n/LanguageContext';
+import { LocalizedText as Text } from '../../components/LocalizedText';
 
 export default function HomeScreen() {
+  const { language, t } = useLanguage();
   const user = useAuthStore((s: { user: import('../../stores/AppStore').User | null }) => s.user);
   const lists = useListStore(
     (s: { lists: import('../../domain/entities/ShoppingList').ShoppingList[] }) => s.lists,
@@ -28,9 +31,9 @@ export default function HomeScreen() {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Buenos dias';
-    if (hour < 18) return 'Buenas tardes';
-    return 'Buenas noches';
+    if (hour < 12) return t('Buenos dias');
+    if (hour < 18) return t('Buenas tardes');
+    return t('Buenas noches');
   };
 
   return (
@@ -40,7 +43,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>{getGreeting()}</Text>
-            <Text style={styles.userName}>{user?.name ?? 'Usuario'}</Text>
+            <Text style={styles.userName}>{user?.name ?? t('Usuario')}</Text>
           </View>
           <TouchableOpacity
             style={styles.avatarBtn}
@@ -58,9 +61,9 @@ export default function HomeScreen() {
           activeOpacity={0.85}
         >
           <View style={styles.heroContent}>
-            <Text style={styles.heroTitle}>Nueva compra</Text>
+            <Text style={styles.heroTitle}>{t('Nueva compra')}</Text>
             <Text style={styles.heroSubtitle}>
-              Escribe tu lista y encontramos los mejores precios
+              {t('Escribe tu lista y encontramos los mejores precios')}
             </Text>
           </View>
           <View style={styles.heroIconWrap}>
@@ -74,28 +77,23 @@ export default function HomeScreen() {
             <StatCard
               icon="wallet"
               value={formatCurrency(totalSavings)}
-              label="Ahorrado"
+              label={t('Ahorrado')}
               color={colors.success}
             />
             <StatCard
               icon="list"
               value={`${lists.length}`}
-              label="Listas"
+              label={t('Listas')}
               color={colors.secondary}
             />
-            <StatCard
-              icon="map"
-              value={`${plans.length}`}
-              label="Planes"
-              color={colors.warning}
-            />
+            <StatCard icon="map" value={`${plans.length}`} label={t('Planes')} color={colors.warning} />
           </View>
         )}
 
         {/* Recent List */}
         {recentList && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Tu ultima lista</Text>
+            <Text style={styles.sectionTitle}>{t('Tu ultima lista')}</Text>
             <TouchableOpacity
               style={styles.recentCard}
               onPress={() => router.push('/(shopping)/list-detail')}
@@ -107,7 +105,9 @@ export default function HomeScreen() {
                   {recentList.title}
                 </Text>
                 <Text style={styles.recentMeta}>
-                  {recentList.itemCount} productos
+                  {language === 'en'
+                    ? `${recentList.itemCount} products`
+                    : `${recentList.itemCount} productos`}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
@@ -117,27 +117,27 @@ export default function HomeScreen() {
 
         {/* How it Works */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Como funciona</Text>
+          <Text style={styles.sectionTitle}>{t('Como funciona')}</Text>
           <View style={styles.stepsContainer}>
             <StepItem
               number="1"
               icon="document-text"
-              title="Sube tu lista"
-              description="Escribe, pega o dicta tu lista de compras"
+              title={t('Sube tu lista')}
+              description={t('Escribe, pega o dicta tu lista de compras')}
             />
             <View style={styles.stepConnector} />
             <StepItem
               number="2"
               icon="search"
-              title="Comparamos precios"
-              description="Revisamos tiendas, promociones y disponibilidad"
+              title={t('Comparamos precios')}
+              description={t('Revisamos tiendas, promociones y disponibilidad')}
             />
             <View style={styles.stepConnector} />
             <StepItem
               number="3"
               icon="map"
-              title="Optimizamos la ruta"
-              description="La mejor estrategia para ahorrar tiempo y dinero"
+              title={t('Optimizamos la ruta')}
+              description={t('La mejor estrategia para ahorrar tiempo y dinero')}
             />
           </View>
         </View>
@@ -148,8 +148,7 @@ export default function HomeScreen() {
             <Ionicons name="bulb-outline" size={18} color={colors.warning} />
           </View>
           <Text style={styles.tipText}>
-            Tip: Se concreta con las marcas para mejores resultados. "2L leche Lala" funciona
-            mejor que solo "leche".
+            {t('Tip: Se concreta con las marcas para mejores resultados. "2L leche Lala" funciona mejor que solo "leche".')}
           </Text>
         </View>
       </ScrollView>

@@ -6,6 +6,7 @@
  */
 
 import * as SecureStore from 'expo-secure-store';
+import type { RawPlanResult } from './planAdapter';
 
 // ─── Configuration ───
 //
@@ -253,45 +254,6 @@ export interface BackendParseResult {
   stats: { total: number; parsed: number; withBrand: number; withCategory: number };
 }
 
-export interface BackendPlanResult {
-  planId: string;
-  stores: Array<{
-    storeId: string;
-    storeName: string;
-    retailerName: string;
-    address: string;
-    latitude: number;
-    longitude: number;
-    distanceKm: number;
-    productCostCents: number;
-    transportCostCents: number;
-    items: Array<{
-      itemId: string;
-      name: string;
-      quantity: number;
-      unit: string;
-      unitPriceCents: number;
-      lineTotalCents: number;
-      promo: string | null;
-    }>;
-    promos: string[];
-  }>;
-  summary: {
-    totalProductCostCents: number;
-    totalTransportCostCents: number;
-    totalDistanceKm: number;
-    estimatedTimeMinutes: number;
-    totalItems: number;
-    storesCount: number;
-    savingsCents: number;
-    baselineCents: number;
-    effectiveCostCents: number;
-    confidence: string;
-  };
-  warnings: string[];
-  isMock: boolean;
-}
-
 export interface BackendMission {
   id: string;
   planId: string;
@@ -427,8 +389,13 @@ export const storesApi = {
 };
 
 export const optimizeApi = {
+  /**
+   * Runs the optimization. The raw payload is returned untouched — use
+   * `toShoppingPlan` from `./planAdapter` to get a domain entity, which
+   * normalizes the backend's pesos-based wire format into integer cents.
+   */
   run(listId: string, mode: string, userLocation?: { latitude: number; longitude: number }) {
-    return authedApi<BackendPlanResult>('/api/v1/optimize', {
+    return authedApi<RawPlanResult>('/api/v1/optimize', {
       method: 'POST',
       body: { listId, mode, userLocation },
     });

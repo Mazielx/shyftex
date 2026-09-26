@@ -1,6 +1,6 @@
 # AGENTS.md — Project Rules for AI Agents
 
-## Project: Intelligent Shopping Optimizer
+## Project: SHYFTEX
 
 ### Core Rules
 

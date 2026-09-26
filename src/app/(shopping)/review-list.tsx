@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
@@ -13,6 +12,8 @@ import { router } from 'expo-router';
 import { colors, spacing, borderRadius, shadows, typography } from '../../config/theme';
 import { useListStore, useOptimizationStore } from '../../stores/AppStore';
 import { ShoppingItem, ItemPriority, MatchLevel } from '../../domain/entities/ShoppingItem';
+import { LocalizedText as Text } from '../../components/LocalizedText';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function ReviewListScreen() {
   const { items, updateItem, removeItem } = useListStore();
@@ -92,6 +93,7 @@ function ItemCard({
   onUpdate: (updates: Partial<ShoppingItem>) => void;
   onRemove: () => void;
 }) {
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
 
   const priorityColors = {
@@ -187,9 +189,9 @@ function ItemCard({
             <TouchableOpacity
               style={[styles.actionButton, styles.deleteAction]}
               onPress={() => {
-                Alert.alert('Eliminar', '¿Eliminar este producto?', [
-                  { text: 'Cancelar', style: 'cancel' },
-                  { text: 'Eliminar', style: 'destructive', onPress: onRemove },
+                Alert.alert(t('Eliminar'), t('¿Eliminar este producto?'), [
+                  { text: t('Cancelar'), style: 'cancel' },
+                  { text: t('Eliminar'), style: 'destructive', onPress: onRemove },
                 ]);
               }}
             >
